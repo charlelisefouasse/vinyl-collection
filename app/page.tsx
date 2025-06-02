@@ -1,5 +1,7 @@
 "useClient";
 import prisma from "@/lib/prisma";
+import Image from "next/image";
+import Link from "next/link";
 
 export default async function Home() {
   const albums = await prisma.album.findMany({ include: { artists: true } });
@@ -7,16 +9,15 @@ export default async function Home() {
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
         <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            {albums.map((album) => (
-              <div key={album.id}>
-                {album.name} -{" "}
-                {album.artists.map((artist) => artist.name).join(", ")}
-              </div>
-            ))}
-          </li>
+          {albums.map((album) => (
+            <ul key={album.id} className="mb-2 tracking-[-.01em]">
+              <Image src={album.image} alt="" width={200} height={200} />
+              {album.name} -{" "}
+              {album.artists.map((artist) => artist.name).join(", ")}
+            </ul>
+          ))}
         </ol>
-        <a href="/create"> Ajouter un vinyle</a>
+        <Link href="/create"> Ajouter un vinyle</Link>
       </main>
     </div>
   );

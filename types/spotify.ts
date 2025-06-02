@@ -1,4 +1,5 @@
 import { Album, Artist } from "@/app/generated/prisma";
+import { v4 as uuid } from "uuid";
 
 // Reusable types
 export type SpotifyExternalUrl = {
@@ -62,11 +63,11 @@ export const mapAlbumsToUI = (
     name: album.name,
     genres: [],
     image: album.images[0]?.url,
-    id: album.id,
+    id: uuid(),
     release_date: album.release_date,
     variant: null,
     artists: album.artists.map((artist) => ({
-      id: artist.id,
+      id: uuid(),
       name: artist.name,
     })),
   }));
