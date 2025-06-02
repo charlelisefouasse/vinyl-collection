@@ -1,3 +1,4 @@
+"useClient";
 import prisma from "@/lib/prisma";
 
 export default async function Home() {
@@ -15,6 +16,7 @@ export default async function Home() {
             ))}
           </li>
         </ol>
+        <a href="/create"> Ajouter un vinyle</a>
       </main>
     </div>
   );
