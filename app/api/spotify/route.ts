@@ -3,6 +3,20 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
+  // const cookie = req.headers.get("cookie") ?? "";
+
+  // const session = await getServerSession(
+  //   { ...req, headers: { cookie } },
+  //   res,
+  //   authConfig
+  // );
+
+  // console.log("session server", session);
+
+  // if (!session || session.user?.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+  //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // }
+
   const clientId = process.env.SPOTIFY_CLIENT_ID!;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET!;
 

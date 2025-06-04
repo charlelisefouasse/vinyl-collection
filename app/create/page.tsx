@@ -11,15 +11,22 @@ import { AlbumUI } from "@/types/spotify";
 import { v4 as uuid } from "uuid";
 import { toast, Toaster } from "sonner";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function Home() {
+  const { data: session } = useSession();
+
+  if (!session || session.user?.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+    redirect("/login");
+  }
+
   const [searchTerm, setSearchTerm] = useState("");
   const searchAlbums = useGetAlbums(searchTerm);
   const [album, setAlbum] = useState<AlbumUI>();
 
   const createAlbum = useCreateAlbum({
     onError: (error) => {
-      console.log(error);
       toast.error(
         error instanceof Error
           ? error.message
@@ -27,7 +34,6 @@ export default function Home() {
       );
     },
     onSuccess: () => {
-      console.log("success");
       toast.success("Album created successfully!");
       setAlbum(undefined);
       setSearchTerm("");
@@ -43,10 +49,7 @@ export default function Home() {
       release_date: album?.release_date || "",
     },
     onSubmit: async ({ value }) => {
-      console.log("submit");
-      // Handle form submission
       if (album) {
-        console.log("create album");
         createAlbum.mutate({
           ...album,
           ...value,

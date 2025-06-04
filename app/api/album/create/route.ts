@@ -1,9 +1,19 @@
+import { authConfig } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
 import { AlbumUI } from "@/types/spotify";
+import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
+  const session = await getServerSession(authConfig);
+
+  console.log("session server", session);
+
+  // if (!session || session.user?.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+  //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // }
+
   try {
     const data: AlbumUI = req.body ? await req.json() : {};
 
