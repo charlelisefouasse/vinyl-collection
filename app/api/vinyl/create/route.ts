@@ -8,11 +8,13 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authConfig);
 
-  console.log("session server", session);
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-  // if (!session || session.user?.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-  //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  // }
+  if (session.user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   try {
     const data: AlbumUI = req.body ? await req.json() : {};
@@ -28,9 +30,9 @@ export async function POST(req: NextRequest) {
       data: {
         ...data,
         artists: {
-          create: data.artists.map((artist) => ({
-            id: artist.id,
-            name: artist.name,
+          connectOrCreate: data.artists.map((artist) => ({
+            where: { id: artist.id },
+            create: { id: artist.id, name: artist.name },
           })),
         },
       },

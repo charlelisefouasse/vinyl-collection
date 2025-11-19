@@ -23,7 +23,10 @@ export const useGetAlbums = (searchTerm: string) => {
   return useQuery<Array<AlbumUI>>({
     queryKey: ["albums", searchTerm],
     queryFn: async () =>
-      await fetch(`/api/spotify?type=album&q=${encodeURIComponent(searchTerm)}`)
+      await fetch(
+        `/api/spotify?type=album&q=${encodeURIComponent(searchTerm)}`,
+        { credentials: "include" }
+      )
         .then((res) => res.json())
         .then(mapAlbumsToUI),
     enabled: !!searchTerm,
@@ -41,6 +44,7 @@ export const useCreateAlbum = (
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
       });
     },
     ...options,
