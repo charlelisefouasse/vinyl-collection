@@ -7,7 +7,7 @@ export const Header = ({ children, className, ...rest }: HeaderProps) => {
   return (
     <header
       className={twMerge(
-        "border-b bg-white/80  dark:bg-slate-900/80",
+        "border-b bg-white/80 dark:bg-slate-800/70",
         className
       )}
       {...rest}

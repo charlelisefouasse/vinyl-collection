@@ -9,7 +9,7 @@ export const AlbumCard = ({ album, className, ...rest }: AlbumCardProps) => {
   return (
     <Card
       className={twMerge(
-        "bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border border-gray-200 shadow-lg pt-3 sm:pt-6 pb-2",
+        "bg-white/70 dark:bg-slate-700/80 backdrop-blur-sm border border-gray-200 dark:border-none shadow-lg pt-3 sm:pt-6 pb-2",
         className
       )}
       {...rest}
@@ -27,7 +27,7 @@ export const AlbumCard = ({ album, className, ...rest }: AlbumCardProps) => {
             <div className="absolute top-2 right-2">
               <Badge
                 variant="outline"
-                className="text-xs bg-white/70 font-semibold"
+                className="text-xs bg-background/70 font-semibold"
               >
                 {album.variant}
               </Badge>

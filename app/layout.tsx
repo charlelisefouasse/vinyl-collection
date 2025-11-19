@@ -4,16 +4,7 @@ import "./globals.css";
 import React from "react";
 import ReactQueryProvider from "@/app/providers/tanstack-query";
 import { AuthSessionProvider } from "@/app/providers/next-auth";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { Providers } from "@/app/providers";
 
 export const metadata: Metadata = {
   title: "Mes vinyles",
@@ -26,17 +17,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <AuthSessionProvider>
-          <ReactQueryProvider>
-            <div className="min-h-screen from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-              {children}
-            </div>
-          </ReactQueryProvider>
-        </AuthSessionProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <Providers>
+          <div className="min-h-screen from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+            {children}
+          </div>
+        </Providers>
       </body>
     </html>
   );
