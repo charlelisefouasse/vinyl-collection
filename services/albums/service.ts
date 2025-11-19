@@ -3,7 +3,21 @@ import {
   useMutation,
   UseMutationOptions,
   useQuery,
+  keepPreviousData,
 } from "@tanstack/react-query";
+
+export const getVinylsQueryOptions = (searchTerm?: string) => ({
+  queryKey: ["vinyle", searchTerm],
+  queryFn: async () => {
+    const params = searchTerm ? `?s=${encodeURIComponent(searchTerm)}` : "";
+    return await fetch(`/api/vinyl${params}`).then((res) => res.json());
+  },
+  placeholderData: keepPreviousData,
+});
+
+export const useGetVinyls = (searchTerm?: string) => {
+  return useQuery<AlbumUI[]>(getVinylsQueryOptions(searchTerm));
+};
 
 export const useGetAlbums = (searchTerm: string) => {
   return useQuery<Array<AlbumUI>>({
@@ -21,7 +35,7 @@ export const useCreateAlbum = (
 ) => {
   return useMutation({
     mutationFn: async (data) => {
-      await fetch("/api/album/create", {
+      await fetch("/api/vinyl/create", {
         method: "POST",
         body: JSON.stringify(data),
         headers: {

@@ -1,14 +1,16 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardProps } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { AlbumUI } from "@/types/spotify";
 import Image from "next/image";
-import { twMerge } from "tailwind-merge";
 
-export type AlbumCardProps = CardProps & { album: AlbumUI };
+export type AlbumCardProps = CardProps & {
+  album: AlbumUI;
+};
 export const AlbumCard = ({ album, className, ...rest }: AlbumCardProps) => {
   return (
     <Card
-      className={twMerge(
+      className={cn(
         "bg-white/70 dark:bg-slate-700/80 backdrop-blur-sm border border-gray-200 dark:border-none shadow-lg pt-3 sm:pt-6 pb-2",
         className
       )}
@@ -44,9 +46,9 @@ export const AlbumCard = ({ album, className, ...rest }: AlbumCardProps) => {
             {album.artists.map((artist) => artist.name).join(", ")}
           </p>
 
-          <div className="flex flex-wrap gap-1">
-            {album.genres &&
-              album.genres.map((genre, index) => (
+          {album.genres && (
+            <div className="flex flex-wrap gap-1">
+              {album.genres.map((genre, index) => (
                 <Badge
                   key={index}
                   variant="secondary"
@@ -55,7 +57,8 @@ export const AlbumCard = ({ album, className, ...rest }: AlbumCardProps) => {
                   {genre}
                 </Badge>
               ))}
-          </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
