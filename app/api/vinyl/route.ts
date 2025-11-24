@@ -30,6 +30,9 @@ export async function GET(req: NextRequest) {
           }
         : undefined,
       include: { artists: true },
+      orderBy: [
+        { release_date: "asc" }, // first sort by release date ascending
+      ],
     })
     .then((value) =>
       [...value].sort((a, b) => {
