@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import React from "react";
-import ReactQueryProvider from "@/app/providers/tanstack-query";
-import { AuthSessionProvider } from "@/app/providers/next-auth";
+
 import { Providers } from "@/app/providers";
 
 export const metadata: Metadata = {

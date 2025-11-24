@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useCreateAlbum, useGetAlbums } from "@/services/albums/service";
 import { useForm } from "@tanstack/react-form";
 import { Input } from "@/components/ui/input";
