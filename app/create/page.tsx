@@ -29,22 +29,7 @@ export default function Home() {
   const searchAlbums = useGetAlbums(searchTerm);
   const [album, setAlbum] = useState<AlbumUI>();
 
-  const createAlbum = useCreateAlbum({
-    onError: (error) => {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "An error occurred while creating the album"
-      );
-    },
-    onSuccess: () => {
-      toast.success("Album created successfully!");
-      setAlbum(undefined);
-      setSearchTerm("");
-    },
-  });
-
-  const { Field, handleSubmit } = useForm({
+  const form = useForm({
     defaultValues: {
       name: album?.name || "",
       artists: album?.artists || [],
@@ -61,6 +46,22 @@ export default function Home() {
           id: album?.id || uuid(),
         });
       }
+    },
+  });
+
+  const createAlbum = useCreateAlbum({
+    onError: (error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "An error occurred while creating the album"
+      );
+    },
+    onSuccess: () => {
+      toast.success("Album created successfully!");
+      setAlbum(undefined);
+      setSearchTerm("");
+      form.reset();
     },
   });
 
@@ -126,7 +127,8 @@ export default function Home() {
 
                     {!searchAlbums.isLoading &&
                       !!searchTerm &&
-                      !searchAlbums.data?.length && (
+                      !searchAlbums.data?.length &&
+                      !searchAlbums.isError && (
                         <div className="text-center py-8">
                           <Music className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                           <p className="text-muted-foreground">
@@ -240,11 +242,11 @@ export default function Home() {
                     <form
                       onSubmit={(e) => {
                         e.preventDefault();
-                        handleSubmit();
+                        form.handleSubmit();
                       }}
                     >
                       <div className="gap-6 flex flex-col">
-                        <Field name="name">
+                        <form.Field name="name">
                           {({ state, handleChange, handleBlur }) => (
                             <div className="space-y-2">
                               <Label>Name</Label>
@@ -256,8 +258,8 @@ export default function Home() {
                               />
                             </div>
                           )}
-                        </Field>
-                        <Field
+                        </form.Field>
+                        <form.Field
                           name="artists"
                           // validators={{ onSubmit: ({ value }) => !!value }}
                         >
@@ -282,8 +284,8 @@ export default function Home() {
                               />
                             </div>
                           )}
-                        </Field>
-                        <Field
+                        </form.Field>
+                        <form.Field
                           name="release_date"
                           // validators={{ onSubmit: ({ value }) => !!value }}
                         >
@@ -298,8 +300,8 @@ export default function Home() {
                               />
                             </div>
                           )}
-                        </Field>
-                        <Field name="variant">
+                        </form.Field>
+                        <form.Field name="variant">
                           {({ state, handleChange, handleBlur }) => (
                             <div>
                               <Label>Variant</Label>
@@ -311,8 +313,8 @@ export default function Home() {
                               />
                             </div>
                           )}
-                        </Field>
-                        <Field name="genres">
+                        </form.Field>
+                        <form.Field name="genres">
                           {({ state, handleChange, handleBlur }) => (
                             <div>
                               <Label>Genres</Label>
@@ -324,7 +326,7 @@ export default function Home() {
                               />
                             </div>
                           )}
-                        </Field>
+                        </form.Field>
                       </div>
                       <div className="flex gap-4 pt-6 place-content-between">
                         <Button

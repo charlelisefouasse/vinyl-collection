@@ -44,6 +44,9 @@ importers:
       next-themes:
         specifier: 0.4.6
         version: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      prisma:
+        specifier: 6.18.0
+        version: 6.18.0(typescript@5.9.3)
       react:
         specifier: 19.2.0
         version: 19.2.0
@@ -84,9 +87,6 @@ importers:
       eslint-config-next:
         specifier: 15.3.3
         version: 15.3.3(eslint@9.28.0(jiti@2.4.2))(typescript@5.9.3)
-      prisma:
-        specifier: 6.18.0
-        version: 6.18.0(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.16
         version: 4.1.16

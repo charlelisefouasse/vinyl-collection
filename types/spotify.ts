@@ -1,4 +1,4 @@
-import { Album, Artist } from "@prisma/client";
+import { Album, Artist } from "@/app/generated/prisma";
 import { v4 as uuid } from "uuid";
 
 // Reusable types
@@ -54,7 +54,7 @@ export type SpotifySearchResponse = {
   albums: SpotifyPaging<SpotifyAlbum>;
 };
 
-export type AlbumUI = Album & { artists: Array<Omit<Artist, "albumId">> };
+export type AlbumUI = Album & { artists: Array<Artist> };
 
 export const mapAlbumsToUI = (
   response: SpotifySearchResponse

@@ -26,11 +26,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const { artists, ...album } = data;
+
     const created = await prisma.album.create({
       data: {
-        ...data,
+        ...album,
         artists: {
-          connectOrCreate: data.artists.map((artist) => ({
+          connectOrCreate: artists.map((artist) => ({
             where: { id: artist.id },
             create: { id: artist.id, name: artist.name },
           })),
