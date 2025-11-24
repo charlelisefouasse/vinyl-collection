@@ -1,4 +1,4 @@
-import { Album, Artist } from "@/app/generated/prisma";
+import { Album, Artist } from "@prisma/client";
 import { v4 as uuid } from "uuid";
 
 // Reusable types
