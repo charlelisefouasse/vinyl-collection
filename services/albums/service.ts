@@ -1,18 +1,20 @@
 import { AlbumUI, mapAlbumsToUI } from "@/types/spotify";
 import {
+  keepPreviousData,
   useMutation,
   UseMutationOptions,
   useQuery,
-  keepPreviousData,
 } from "@tanstack/react-query";
 
 export const getVinylsQueryOptions = (searchTerm?: string) => ({
-  queryKey: ["vinyle", searchTerm],
+  queryKey: searchTerm ? ["vinyls", searchTerm] : ["vinyls"],
   queryFn: async () => {
     const params = searchTerm ? `?s=${encodeURIComponent(searchTerm)}` : "";
     return await fetch(`/api/vinyl${params}`).then((res) => res.json());
   },
   placeholderData: keepPreviousData,
+  refetchOnWindowFocus: false,
+  refetchOnMount: false,
 });
 
 export const useGetVinyls = (searchTerm?: string) => {

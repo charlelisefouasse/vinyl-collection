@@ -8,10 +8,12 @@ import { Music } from "lucide-react";
 import { AlbumCard } from "@/components/album-card";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useDebounce } from "use-debounce";
 
 export default function VinylsList() {
   const [searchTerm, setSearchTerm] = useState("");
-  const vinyls = useGetVinyls(searchTerm);
+  const [search] = useDebounce(searchTerm, 1000);
+  const vinyls = useGetVinyls(search);
 
   return (
     <div>

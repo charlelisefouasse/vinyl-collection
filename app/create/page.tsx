@@ -16,6 +16,7 @@ import { useSession } from "next-auth/react";
 import { ArrowLeft, Music, Plus, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Header } from "@/components/header";
+import { useDebounce } from "use-debounce";
 
 export default function Home() {
   const session = useSession({
@@ -26,7 +27,8 @@ export default function Home() {
   });
 
   const [searchTerm, setSearchTerm] = useState("");
-  const searchAlbums = useGetAlbums(searchTerm);
+  const [search] = useDebounce(searchTerm, 1000);
+  const searchAlbums = useGetAlbums(search);
   const [album, setAlbum] = useState<AlbumUI>();
 
   const form = useForm({
