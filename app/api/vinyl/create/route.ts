@@ -1,4 +1,4 @@
-import { authConfig } from "@/app/api/auth/[...nextauth]/route";
+import { authConfig } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { AlbumUI } from "@/types/spotify";
 import { getServerSession } from "next-auth";
