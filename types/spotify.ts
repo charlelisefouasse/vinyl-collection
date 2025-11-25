@@ -1,4 +1,4 @@
-import { Album, Artist } from "@/app/generated/prisma";
+import { Album } from "@/app/generated/prisma";
 import { v4 as uuid } from "uuid";
 
 // Reusable types
@@ -54,7 +54,7 @@ export type SpotifySearchResponse = {
   albums: SpotifyPaging<SpotifyAlbum>;
 };
 
-export type AlbumUI = Album & { artists: Array<Artist> };
+export type AlbumUI = Album;
 
 export const mapAlbumsToUI = (
   response: SpotifySearchResponse
@@ -66,9 +66,6 @@ export const mapAlbumsToUI = (
     id: uuid(),
     release_date: album.release_date,
     variant: null,
-    artists: album.artists.map((artist) => ({
-      id: uuid(),
-      name: artist.name,
-    })),
+    artist: album.artists.map((artist) => artist.name).join(", "),
   }));
 };

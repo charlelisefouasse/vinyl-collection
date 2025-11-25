@@ -19,13 +19,7 @@ model Album {
   name         String
   image        String
   release_date String
-  artists      Artist[] @relation("AlbumArtists")
   genres       String[]
   variant      String?
-}
-
-model Artist {
-  id     String  @id
-  name   String
-  albums Album[] @relation("AlbumArtists")
+  artist       String
 }

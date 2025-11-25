@@ -30,7 +30,7 @@ export default function VinylsList() {
               <h1 className="text-2xl font-bold">Ma Collection</h1>
 
               {vinyls.data && (
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground dark:text-foreground/60">
                   {vinyls.data.length} vinyle
                   {vinyls.data.length > 1 ? "s" : ""}
                   {searchTerm

@@ -27,14 +27,14 @@ export default function Home() {
   });
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [search] = useDebounce(searchTerm, 1000);
+  const [search] = useDebounce(searchTerm, 500);
   const searchAlbums = useGetAlbums(search);
   const [album, setAlbum] = useState<AlbumUI>();
 
   const form = useForm({
     defaultValues: {
       name: album?.name || "",
-      artists: album?.artists || [],
+      artist: album?.artist || "",
       variant: "",
       genres: "",
       release_date: album?.release_date || "",
@@ -162,9 +162,7 @@ export default function Home() {
                                     {albumResult.name}
                                   </h3>
                                   <p className="text-muted-foreground">
-                                    {albumResult.artists
-                                      .map((artist) => artist.name)
-                                      .join(", ")}
+                                    {albumResult.artist}
                                   </p>
                                   {albumResult.release_date && (
                                     <p className="text-sm text-muted-foreground">
@@ -225,11 +223,7 @@ export default function Home() {
                         <h3 className="text-xl font-semibold line-clamp-2">
                           {album.name}
                         </h3>
-                        <p className="text-muted-foreground">
-                          {album.artists
-                            .map((artist) => artist.name)
-                            .join(", ")}
-                        </p>
+                        <p className="text-muted-foreground">{album.artist}</p>
                         {album.release_date && (
                           <p className="text-sm text-muted-foreground">
                             {new Date(album.release_date).getFullYear()}
@@ -262,25 +256,15 @@ export default function Home() {
                           )}
                         </form.Field>
                         <form.Field
-                          name="artists"
+                          name="artist"
                           // validators={{ onSubmit: ({ value }) => !!value }}
                         >
                           {({ state, handleChange, handleBlur }) => (
                             <div>
                               <Label>Artist</Label>
                               <Input
-                                value={state.value
-                                  .map((artist) => artist.name)
-                                  .join(", ")}
-                                onChange={(e) =>
-                                  handleChange(
-                                    e.target.value.split(",").map((name) => ({
-                                      name,
-                                      id: uuid(),
-                                      albumId: album.id,
-                                    }))
-                                  )
-                                }
+                                value={state.value}
+                                onChange={(e) => handleChange(e.target.value)}
                                 onBlur={handleBlur}
                                 placeholder="Artists (comma separated)"
                               />

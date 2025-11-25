@@ -19,25 +19,15 @@ export async function POST(req: NextRequest) {
   try {
     const data: AlbumUI = req.body ? await req.json() : {};
 
-    if (!data || !data.name || !data.artists?.length) {
+    if (!data || !data.name || !data.artist) {
       return NextResponse.json(
         { error: "Invalid data: missing 'name' or 'artists'" },
         { status: 400 }
       );
     }
 
-    const { artists, ...album } = data;
-
     const created = await prisma.album.create({
-      data: {
-        ...album,
-        artists: {
-          connectOrCreate: artists.map((artist) => ({
-            where: { id: artist.id },
-            create: { id: artist.id, name: artist.name },
-          })),
-        },
-      },
+      data,
     });
 
     revalidatePath("/");

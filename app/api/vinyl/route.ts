@@ -5,42 +5,27 @@ export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const searchTerm = searchParams.get("s");
 
-  const vinyls = await prisma.album
-    .findMany({
-      where: searchTerm
-        ? {
-            OR: [
-              {
-                name: {
-                  contains: searchTerm,
-                  mode: "insensitive",
-                },
+  const vinyls = await prisma.album.findMany({
+    where: searchTerm
+      ? {
+          OR: [
+            {
+              name: {
+                contains: searchTerm,
+                mode: "insensitive",
               },
-              {
-                artists: {
-                  some: {
-                    name: {
-                      contains: searchTerm,
-                      mode: "insensitive",
-                    },
-                  },
-                },
+            },
+            {
+              artist: {
+                contains: searchTerm,
+                mode: "insensitive",
               },
-            ],
-          }
-        : undefined,
-      include: { artists: true },
-      orderBy: [
-        { release_date: "asc" }, // first sort by release date ascending
-      ],
-    })
-    .then((value) =>
-      [...value].sort((a, b) => {
-        const artistA = a.artists[0]?.name || "";
-        const artistB = b.artists[0]?.name || "";
-        return artistA.localeCompare(artistB);
-      })
-    );
+            },
+          ],
+        }
+      : undefined,
+    orderBy: [{ artist: "asc" }, { release_date: "asc" }],
+  });
 
   return NextResponse.json(vinyls);
 }

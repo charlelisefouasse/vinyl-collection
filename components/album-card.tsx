@@ -26,9 +26,11 @@ export const AlbumCard = ({
         <div className="relative aspect-square  overflow-hidden rounded-sm bg-muted">
           <Image
             src={album.image}
-            alt={`Pochette de ${album.name}`}
+            alt=""
             fill
             className="object-cover"
+            preload
+            fetchPriority="high"
             sizes="sm:100vw, md:50vw, lg:33vw, xl:25vw, 20vw"
           />
           {album.variant && (
@@ -63,13 +65,13 @@ export const AlbumCard = ({
 
           <p
             className={cn(
-              "text-sm md:text-base text-muted-foreground line-clamp-1",
+              "text-sm md:text-base text-muted-foreground dark:text-foreground/60 line-clamp-1",
               {
                 "text-base line-clamp-none": isInModal,
               }
             )}
           >
-            {album.artists.map((artist) => artist.name).join(", ")}
+            {album.artist}
           </p>
 
           {album.genres && (
