@@ -6,8 +6,14 @@ import Image from "next/image";
 
 export type AlbumCardProps = CardProps & {
   album: AlbumUI;
+  isInModal?: boolean;
 };
-export const AlbumCard = ({ album, className, ...rest }: AlbumCardProps) => {
+export const AlbumCard = ({
+  album,
+  className,
+  isInModal,
+  ...rest
+}: AlbumCardProps) => {
   return (
     <Card
       className={cn(
@@ -29,7 +35,13 @@ export const AlbumCard = ({ album, className, ...rest }: AlbumCardProps) => {
             <div className="absolute top-2 right-2">
               <Badge
                 variant="outline"
-                className="text-xs bg-background/70 font-semibold"
+                className={cn(
+                  "text-xs bg-background/70 font-semibold text-wrap line-clamp-1 text-ellipsis",
+                  {
+                    "text-sm": isInModal,
+                    "max-w-28 sm:max-w-none": !isInModal,
+                  }
+                )}
               >
                 {album.variant}
               </Badge>
@@ -38,11 +50,25 @@ export const AlbumCard = ({ album, className, ...rest }: AlbumCardProps) => {
         </div>
 
         <div className="space-y-1">
-          <h2 className="font-semibold text-lg leading-tight line-clamp-2">
+          <h2
+            className={cn(
+              "font-semibold text-base md:text-lg leading-tight line-clamp-2",
+              {
+                "text-lg line-clamp-none": isInModal,
+              }
+            )}
+          >
             {album.name}
           </h2>
 
-          <p className="text-md text-muted-foreground">
+          <p
+            className={cn(
+              "text-sm md:text-base text-muted-foreground line-clamp-1",
+              {
+                "text-base line-clamp-none": isInModal,
+              }
+            )}
+          >
             {album.artists.map((artist) => artist.name).join(", ")}
           </p>
 

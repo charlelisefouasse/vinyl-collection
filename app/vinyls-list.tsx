@@ -9,10 +9,12 @@ import { AlbumCard } from "@/components/album-card";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "use-debounce";
+import { AlbumCardSkeleton } from "@/components/album-card-skeleton";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 export default function VinylsList() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [search] = useDebounce(searchTerm, 1000);
+  const [search] = useDebounce(searchTerm, 500);
   const vinyls = useGetVinyls(search);
 
   return (
@@ -53,6 +55,14 @@ export default function VinylsList() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
 
+        {vinyls.isLoading && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+            {Array.from(new Array(5).keys()).map((key) => (
+              <AlbumCardSkeleton key={key} />
+            ))}
+          </div>
+        )}
+
         {vinyls.error && <div>Une erreur est survenue.</div>}
 
         {vinyls.data && !vinyls.error && (
@@ -67,13 +77,23 @@ export default function VinylsList() {
                 </h2>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
                 {vinyls.data.map((album) => (
                   <div
                     key={album.id}
                     className={cn({ "opacity-50": vinyls.isFetching })}
                   >
-                    <AlbumCard album={album} className="h-full" />
+                    <Dialog>
+                      <DialogTrigger className="w-full h-full text-left hover:cursor-pointer">
+                        <AlbumCard album={album} className="h-full" />
+                      </DialogTrigger>
+                      <DialogContent
+                        className="p-0 rounded-2xl"
+                        showCloseButton={false}
+                      >
+                        <AlbumCard album={album} isInModal />
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 ))}
               </div>

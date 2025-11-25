@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useCreateAlbum, useGetAlbums } from "@/services/albums/service";
 import { useForm } from "@tanstack/react-form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@radix-ui/react-label";
 import { Button } from "@/components/ui/button";
 import { AlbumUI } from "@/types/spotify";
 import { v4 as uuid } from "uuid";
@@ -17,6 +16,7 @@ import { ArrowLeft, Music, Plus, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Header } from "@/components/header";
 import { useDebounce } from "use-debounce";
+import { Label } from "@/components/ui/label";
 
 export default function Home() {
   const session = useSession({
