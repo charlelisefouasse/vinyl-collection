@@ -17,8 +17,8 @@ export const AlbumCard = ({
   return (
     <Card
       className={cn(
-        "bg-white/70 dark:bg-slate-700/80 backdrop-blur-sm border border-gray-200 dark:border-none shadow-lg pt-3 sm:pt-6 pb-2",
-        className
+        "backdrop-blur-sm border shadow-lg pt-3 sm:pt-6 pb-2",
+        className,
       )}
       {...rest}
     >
@@ -42,7 +42,7 @@ export const AlbumCard = ({
                   {
                     "text-sm": isInModal,
                     "max-w-28 sm:max-w-none": !isInModal,
-                  }
+                  },
                 )}
               >
                 {album.variant}
@@ -57,7 +57,7 @@ export const AlbumCard = ({
               "font-semibold text-base md:text-lg leading-tight line-clamp-2",
               {
                 "text-lg line-clamp-none": isInModal,
-              }
+              },
             )}
           >
             {album.name}
@@ -68,7 +68,7 @@ export const AlbumCard = ({
               "text-sm md:text-base text-muted-foreground dark:text-foreground/60 line-clamp-1",
               {
                 "text-base line-clamp-none": isInModal,
-              }
+              },
             )}
           >
             {album.artist}

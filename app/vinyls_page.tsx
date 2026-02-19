@@ -49,10 +49,12 @@ export default function VinylsPage() {
       <main className="container mx-auto px-4 py-8 flex flex-col gap-8">
         <Tabs defaultValue="collection" className="w-full">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
-            <TabsList>
-              <TabsTrigger value="collection">Collection</TabsTrigger>
-              <TabsTrigger value="wishlist">Wishlist</TabsTrigger>
-            </TabsList>
+            <div className="flex-1">
+              <TabsList className="">
+                <TabsTrigger value="collection">Collection</TabsTrigger>
+                <TabsTrigger value="wishlist">Wishlist</TabsTrigger>
+              </TabsList>
+            </div>
 
             <Input
               type="text"
@@ -62,6 +64,7 @@ export default function VinylsPage() {
               defaultValue={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+            <div className="flex-1" />
           </div>
 
           <TabsContent value="collection" className="mt-0">

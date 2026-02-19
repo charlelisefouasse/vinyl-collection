@@ -18,9 +18,7 @@ export default function RootLayout({
     <html lang="fr" suppressHydrationWarning>
       <body>
         <Providers>
-          <div className="min-h-screen from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-            {children}
-          </div>
+          <div className="min-h-screen">{children}</div>
         </Providers>
       </body>
     </html>

@@ -10,8 +10,8 @@ export const AlbumCardSkeleton = ({
   return (
     <Card
       className={cn(
-        "bg-white/70 dark:bg-slate-700/80 backdrop-blur-sm border border-gray-200 dark:border-none shadow-lg py-3 sm:py-6",
-        className
+        "backdrop-blur-sm border border-gray-200 dark:border-none shadow-lg py-3 sm:py-6",
+        className,
       )}
       {...rest}
     >
