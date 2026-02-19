@@ -94,7 +94,7 @@ export const AlbumCard = ({
 
           <p
             className={cn(
-              "text-sm md:text-base text-muted-foreground dark:text-foreground/60 line-clamp-1",
+              "text-sm md:text-base text-muted-foreground line-clamp-1",
               {
                 "text-base line-clamp-none": isInModal,
               },

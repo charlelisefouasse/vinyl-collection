@@ -35,9 +35,11 @@ export default function VinylsPage() {
           </div>
 
           <div>
-            <h1 className="text-2xl font-bold">La collection de Charlélise</h1>
+            <h1 className="text-lg md:text-2xl font-bold">
+              La collection de Charlélise
+            </h1>
             {vinyls.data && (
-              <p className="text-muted-foreground dark:text-foreground/60">
+              <p className="text-sm md:text-base text-muted-foreground">
                 {vinyls.data.length} vinyle
                 {vinyls.data.length > 1 ? "s" : ""}
               </p>
@@ -46,9 +48,9 @@ export default function VinylsPage() {
         </div>
       </Header>
 
-      <main className="container mx-auto px-4 py-8 flex flex-col gap-8">
+      <main className="container mx-auto px-4 py-4 md:py-8 flex flex-col gap-8">
         <Tabs defaultValue="collection" className="w-full">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4  md:mb-8">
             <div className="flex-1">
               <TabsList className="">
                 <TabsTrigger value="collection">Collection</TabsTrigger>

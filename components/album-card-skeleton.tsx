@@ -16,8 +16,8 @@ export const AlbumCardSkeleton = ({
       {...rest}
     >
       <CardContent className="px-3 sm:px-6 flex flex-col gap-3">
-        <div className="relative aspect-square  overflow-hidden rounded-sm bg-muted">
-          <Skeleton className="w-[20vw] sm:w-screen md:w-[50vw] lg:w-[33vw] xl:w-[25vw] h-[20vw] sm:h-[100vw] md:h-[50vw] lg:h-[33vw] xl:h-[25vw]" />
+        <div className="relative aspect-square  overflow-hidden rounded-sm ">
+          <Skeleton className="w-full h-full" />
         </div>
 
         <div className="space-y-3">
