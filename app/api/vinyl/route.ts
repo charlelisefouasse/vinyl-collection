@@ -1,39 +1,44 @@
 import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { authConfig } from "@/lib/auth";
+import { AlbumUI } from "@/types/spotify";
+import { getServerSession } from "next-auth";
+import { revalidatePath } from "next/cache";
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const searchTerm = searchParams.get("s");
+  const type = searchParams.get("type") || "collection";
 
   const vinyls = await prisma.album.findMany({
-    where: searchTerm
-      ? {
-          OR: [
-            {
-              name: {
-                contains: searchTerm,
-                mode: "insensitive",
-              },
-            },
-            {
-              artist: {
-                contains: searchTerm,
-                mode: "insensitive",
-              },
-            },
-          ],
-        }
-      : undefined,
+    where: {
+      AND: [
+        { type: type },
+        searchTerm
+          ? {
+              OR: [
+                {
+                  name: {
+                    contains: searchTerm,
+                    mode: "insensitive",
+                  },
+                },
+                {
+                  artist: {
+                    contains: searchTerm,
+                    mode: "insensitive",
+                  },
+                },
+              ],
+            }
+          : {},
+      ],
+    },
     orderBy: [{ artist: "asc" }, { release_date: "asc" }],
   });
 
   return NextResponse.json(vinyls);
 }
-
-import { authConfig } from "@/lib/auth";
-import { AlbumUI } from "@/types/spotify";
-import { getServerSession } from "next-auth";
-import { revalidatePath } from "next/cache";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authConfig);
@@ -49,9 +54,9 @@ export async function POST(req: NextRequest) {
   try {
     const data: AlbumUI = req.body ? await req.json() : {};
 
-    if (!data || !data.name || !data.artist) {
+    if (!data || !data.name || !data.artist || !data.type) {
       return NextResponse.json(
-        { error: "Invalid data: missing 'name' or 'artists'" },
+        { error: "Invalid data: missing 'name' or 'artists' or 'type'" },
         { status: 400 },
       );
     }

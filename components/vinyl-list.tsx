@@ -59,7 +59,7 @@ export function VinylList({ query }: VinylListProps) {
                 className="p-0 rounded-2xl"
                 showCloseButton={false}
               >
-                <AlbumCard album={album} isInModal />
+                <AlbumCard album={album} isInModal showAdminControls />
               </DialogContent>
             </Dialog>
           </div>

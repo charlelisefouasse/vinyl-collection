@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { useGetAlbums } from "@/services/albums/service";
+import { useAddAlbum, useGetAlbums } from "@/services/albums/service";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlbumUI } from "@/types/spotify";
-import { Toaster } from "sonner";
+
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -14,7 +14,8 @@ import { ArrowLeft, Music, Plus, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Header } from "@/components/header";
 import { useDebounce } from "use-debounce";
-import { AddAlbumForm } from "@/components/add-album-form";
+import { AlbumForm } from "@/components/album-form";
+import { toast } from "sonner";
 
 export default function Home() {
   const session = useSession({
@@ -29,10 +30,19 @@ export default function Home() {
   const searchAlbums = useGetAlbums(search);
   const [album, setAlbum] = useState<AlbumUI>();
 
-  const handleSuccess = () => {
-    setAlbum(undefined);
-    setSearchTerm("");
-  };
+  const addToCollection = useAddAlbum({
+    onError: (error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "An error occurred while adding to collection",
+      );
+    },
+    onSuccess: () => {
+      toast.success("Album added to collection successfully!");
+      setAlbum(undefined);
+    },
+  });
 
   return (
     <>
@@ -202,16 +212,17 @@ export default function Home() {
                 </Card>
                 <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-0 shadow-md">
                   <CardContent>
-                    <AddAlbumForm
+                    <AlbumForm
                       album={album}
-                      onSuccess={handleSuccess}
+                      onSubmit={(payload) => addToCollection.mutate(payload)}
+                      mode="create"
                       onCancel={() => setAlbum(undefined)}
+                      isLoading={addToCollection.isPending}
                     />
                   </CardContent>
                 </Card>
               </div>
             )}
-            <Toaster />
           </>
         )}
       </main>

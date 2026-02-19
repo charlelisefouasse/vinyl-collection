@@ -6,84 +6,88 @@ import { Button } from "@/components/ui/button";
 import { AlbumUI } from "@/types/spotify";
 import { v4 as uuid } from "uuid";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import {
   Field,
+  FieldError,
   FieldGroup,
   FieldLabel,
   FieldSet,
-  FieldError,
 } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
-  useAddToCollection,
-  useAddToWishlist,
+  useAddAlbum,
+  useDeleteAlbum,
+  useUpdateAlbum,
 } from "@/services/albums/service";
+import { useRouter } from "next/navigation";
 
-interface AddAlbumFormProps {
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+interface AlbumFormProps {
   album: AlbumUI;
-  onSuccess: () => void;
-  onCancel: () => void;
+  onSubmit: (paylaod: AlbumUI) => void;
+  onCancel?: () => void;
+  isLoading?: boolean;
+  mode?: "create" | "edit";
 }
 
-export function AddAlbumForm({
+export function AlbumForm({
   album,
-  onSuccess,
+  onSubmit,
   onCancel,
-}: AddAlbumFormProps) {
-  const addToCollection = useAddToCollection({
-    onError: (error) => {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "An error occurred while adding to collection",
-      );
-    },
+  isLoading,
+  mode = "create",
+}: AlbumFormProps) {
+  const router = useRouter();
+
+  const deleteAlbum = useDeleteAlbum({
     onSuccess: () => {
-      toast.success("Album added to collection successfully!");
-      onSuccess();
+      toast.success("Album supprimé");
+      router.back();
+    },
+    onError: () => {
+      toast.error("Erreur lors de la suppression");
     },
   });
 
-  const addToWishlist = useAddToWishlist({
-    onError: (error) => {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "An error occurred while adding to wishlist",
-      );
-    },
-    onSuccess: () => {
-      toast.success("Album added to wishlist successfully!");
-      onSuccess();
-    },
-  });
+  const handleDelete = () => {
+    deleteAlbum.mutate(album.id);
+  };
 
   const form = useForm({
     defaultValues: {
       name: album.name || "",
       artist: album.artist || "",
-      variant: "",
-      genres: "",
+      variant: album.variant || "",
+      genres: album.genres?.join(", ") || "",
       release_date: album.release_date || "",
-      destination: "collection" as "collection" | "wishlist",
+      type: album.type || "collection",
     },
     onSubmit: async ({ value }) => {
-      const { destination, ...values } = value;
       const payload = {
         ...album,
-        ...values,
-        genres: values.genres ? values.genres.split(",") : [],
+        ...value,
+        genres: value.genres
+          ? value.genres.split(",").map((g) => g.trim())
+          : [],
         id: album.id || uuid(),
       };
-
-      if (destination === "wishlist") {
-        addToWishlist.mutate(payload);
-      } else {
-        addToCollection.mutate(payload);
-      }
+      onSubmit(payload);
     },
   });
+
+  const isSubmitting = form.state.isSubmitting || isLoading || isLoading;
 
   return (
     <form
@@ -92,6 +96,7 @@ export function AddAlbumForm({
         e.stopPropagation();
         form.handleSubmit();
       }}
+      className="space-y-6"
     >
       <FieldSet>
         <FieldGroup>
@@ -203,10 +208,10 @@ export function AddAlbumForm({
           />
 
           <form.Field
-            name="destination"
+            name="type"
             children={(field) => (
               <Field>
-                <FieldLabel>Destination</FieldLabel>
+                <FieldLabel>Type</FieldLabel>
                 <RadioGroup
                   onValueChange={(val) =>
                     field.handleChange(val as "collection" | "wishlist")
@@ -217,7 +222,7 @@ export function AddAlbumForm({
                   <div className="flex items-center gap-2">
                     <RadioGroupItem value="collection" id="collection" />
                     <FieldLabel htmlFor="collection" className="font-normal">
-                      Ma Collection
+                      Collection
                     </FieldLabel>
                   </div>
                   <div className="flex items-center gap-2">
@@ -231,27 +236,55 @@ export function AddAlbumForm({
             )}
           />
         </FieldGroup>
+      </FieldSet>
 
-        <div className="flex gap-4 pt-6 place-content-between">
+      <div className="flex justify-end gap-3">
+        {mode === "edit" && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">
+                {deleteAlbum.isPending ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Trash2 />
+                )}
+                Supprimer
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Cette action est irréversible. Cela supprimera l'album de
+                  votre collection.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>
+                  Supprimer
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+        {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
             Annuler
           </Button>
-          <Button
-            disabled={addToCollection.isPending || addToWishlist.isPending}
-            type="submit"
-            className="gap-2"
-          >
-            {addToCollection.isPending || addToWishlist.isPending ? (
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                <Plus className="h-4 w-4" />
-                Ajouter
-              </>
-            )}
-          </Button>
-        </div>
-      </FieldSet>
+        )}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting && <Loader2 className="animate-spin" />}
+          {mode === "create" ? (
+            <>
+              <Plus />
+              Ajouter
+            </>
+          ) : (
+            "Enregistrer"
+          )}
+        </Button>
+      </div>
     </form>
   );
 }

@@ -10,10 +10,11 @@ export default async function Home() {
   const queryClient = new QueryClient();
 
   const vinyls = await prisma.album.findMany({
+    where: { type: "collection" },
     orderBy: [{ artist: "asc" }, { release_date: "asc" }],
   });
 
-  queryClient.setQueryData(["vinyls"], vinyls);
+  queryClient.setQueryData(["vinyls", "collection"], vinyls);
 
   const dehydratedState = dehydrate(queryClient);
 

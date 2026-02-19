@@ -23,14 +23,7 @@ model Album {
   genres       String[]
   variant      String?
   artist       String
+  type         String   @default("collection")
 }
 
-model WishlistAlbum {
-  id           String   @id
-  name         String
-  image        String
-  release_date String
-  genres       String[]
-  variant      String?
-  artist       String
-}
+

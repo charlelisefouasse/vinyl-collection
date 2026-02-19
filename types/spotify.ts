@@ -55,17 +55,15 @@ export type SpotifySearchResponse = {
 };
 
 export type AlbumUI = Album;
-
-export const mapAlbumsToUI = (
-  response: SpotifySearchResponse,
-): Array<AlbumUI> => {
+export function mapAlbumsToUI(response: SpotifySearchResponse): AlbumUI[] {
   return response.albums.items.map((album) => ({
-    name: album.name,
-    genres: [],
-    image: album.images[0]?.url,
     id: uuid(),
+    name: album.name,
+    image: album.images[0]?.url,
+    artist: album.artists.map((artist) => artist.name).join(", "),
     release_date: album.release_date,
     variant: null,
-    artist: album.artists.map((artist) => artist.name).join(", "),
+    genres: [],
+    type: "collection", // Default to collection for Spotify search results
   }));
-};
+}

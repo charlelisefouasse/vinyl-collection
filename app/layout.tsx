@@ -3,6 +3,7 @@ import "./globals.css";
 import React from "react";
 
 import { Providers } from "@/app/providers";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Mes vinyles",
@@ -20,6 +21,7 @@ export default function RootLayout({
         <Providers>
           <div className="min-h-screen">{children}</div>
         </Providers>
+        <Toaster />
       </body>
     </html>
   );

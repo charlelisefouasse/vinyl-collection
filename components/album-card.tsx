@@ -3,17 +3,27 @@ import { Card, CardContent, CardProps } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { AlbumUI } from "@/types/spotify";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { Edit } from "lucide-react";
+import { Button } from "./ui/button";
 
 export type AlbumCardProps = CardProps & {
   album: AlbumUI;
   isInModal?: boolean;
+  showAdminControls?: boolean;
 };
+
 export const AlbumCard = ({
   album,
   className,
   isInModal,
+  showAdminControls = false,
   ...rest
 }: AlbumCardProps) => {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+
   return (
     <Card
       className={cn(
@@ -52,16 +62,35 @@ export const AlbumCard = ({
         </div>
 
         <div className="space-y-1">
-          <h2
-            className={cn(
-              "font-semibold text-base md:text-lg leading-tight line-clamp-2",
-              {
-                "text-lg line-clamp-none": isInModal,
-              },
+          <div className="flex justify-between items-center">
+            <h2
+              className={cn(
+                "font-semibold text-base md:text-lg leading-tight line-clamp-2",
+                {
+                  "text-lg line-clamp-none": isInModal,
+                },
+              )}
+            >
+              {album.name}
+            </h2>
+            {isAdmin && showAdminControls && (
+              <div
+                className="flex gap-2 mt-2"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Button
+                  size="icon"
+                  variant="outline"
+                  asChild
+                  className="h-8 w-8"
+                >
+                  <Link href={`/edit/${album.id}`}>
+                    <Edit className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
             )}
-          >
-            {album.name}
-          </h2>
+          </div>
 
           <p
             className={cn(
