@@ -1,9 +1,39 @@
-import { authConfig } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(req: NextRequest) {
+  const searchParams = req.nextUrl.searchParams;
+  const searchTerm = searchParams.get("s");
+
+  const wishlist = await prisma.wishlistAlbum.findMany({
+    where: searchTerm
+      ? {
+          OR: [
+            {
+              name: {
+                contains: searchTerm,
+                mode: "insensitive",
+              },
+            },
+            {
+              artist: {
+                contains: searchTerm,
+                mode: "insensitive",
+              },
+            },
+          ],
+        }
+      : undefined,
+    orderBy: [{ artist: "asc" }, { release_date: "asc" }],
+  });
+
+  return NextResponse.json(wishlist);
+}
+
+import { authConfig } from "@/lib/auth";
 import { AlbumUI } from "@/types/spotify";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
-import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authConfig);
@@ -22,11 +52,11 @@ export async function POST(req: NextRequest) {
     if (!data || !data.name || !data.artist) {
       return NextResponse.json(
         { error: "Invalid data: missing 'name' or 'artists'" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const created = await prisma.album.create({
+    const created = await prisma.wishlistAlbum.create({
       data,
     });
 
@@ -34,16 +64,16 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       { success: true, album: created },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
-    console.error("POST /api/album/create error:", error);
+    console.error("POST /api/wishlist error:", error);
     return NextResponse.json(
       {
         error: "Internal server error",
         details: error instanceof Error ? error.message : error,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

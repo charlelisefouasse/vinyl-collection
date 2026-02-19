@@ -2,13 +2,11 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { useCreateAlbum, useGetAlbums } from "@/services/albums/service";
-import { useForm } from "@tanstack/react-form";
+import { useGetAlbums } from "@/services/albums/service";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlbumUI } from "@/types/spotify";
-import { v4 as uuid } from "uuid";
-import { toast, Toaster } from "sonner";
+import { Toaster } from "sonner";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -16,7 +14,7 @@ import { ArrowLeft, Music, Plus, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Header } from "@/components/header";
 import { useDebounce } from "use-debounce";
-import { Label } from "@/components/ui/label";
+import { AddAlbumForm } from "@/components/add-album-form";
 
 export default function Home() {
   const session = useSession({
@@ -31,41 +29,10 @@ export default function Home() {
   const searchAlbums = useGetAlbums(search);
   const [album, setAlbum] = useState<AlbumUI>();
 
-  const form = useForm({
-    defaultValues: {
-      name: album?.name || "",
-      artist: album?.artist || "",
-      variant: "",
-      genres: "",
-      release_date: album?.release_date || "",
-    },
-    onSubmit: async ({ value }) => {
-      if (album) {
-        createAlbum.mutate({
-          ...album,
-          ...value,
-          genres: value.genres ? value.genres.split(",") : [],
-          id: album?.id || uuid(),
-        });
-      }
-    },
-  });
-
-  const createAlbum = useCreateAlbum({
-    onError: (error) => {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "An error occurred while creating the album"
-      );
-    },
-    onSuccess: () => {
-      toast.success("Album created successfully!");
-      setAlbum(undefined);
-      setSearchTerm("");
-      form.reset();
-    },
-  });
+  const handleSuccess = () => {
+    setAlbum(undefined);
+    setSearchTerm("");
+  };
 
   return (
     <>
@@ -167,7 +134,7 @@ export default function Home() {
                                   {albumResult.release_date && (
                                     <p className="text-sm text-muted-foreground">
                                       {new Date(
-                                        albumResult.release_date
+                                        albumResult.release_date,
                                       ).getFullYear()}
                                     </p>
                                   )}
@@ -235,109 +202,11 @@ export default function Home() {
                 </Card>
                 <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-0 shadow-md">
                   <CardContent>
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        form.handleSubmit();
-                      }}
-                    >
-                      <div className="gap-6 flex flex-col">
-                        <form.Field name="name">
-                          {({ state, handleChange, handleBlur }) => (
-                            <div className="space-y-2">
-                              <Label>Name</Label>
-                              <Input
-                                value={state.value}
-                                onChange={(e) => handleChange(e.target.value)}
-                                onBlur={handleBlur}
-                                placeholder="Album name"
-                              />
-                            </div>
-                          )}
-                        </form.Field>
-                        <form.Field
-                          name="artist"
-                          // validators={{ onSubmit: ({ value }) => !!value }}
-                        >
-                          {({ state, handleChange, handleBlur }) => (
-                            <div>
-                              <Label>Artist</Label>
-                              <Input
-                                value={state.value}
-                                onChange={(e) => handleChange(e.target.value)}
-                                onBlur={handleBlur}
-                                placeholder="Artists (comma separated)"
-                              />
-                            </div>
-                          )}
-                        </form.Field>
-                        <form.Field
-                          name="release_date"
-                          // validators={{ onSubmit: ({ value }) => !!value }}
-                        >
-                          {({ state, handleChange, handleBlur }) => (
-                            <div>
-                              <Label>Release Date</Label>
-                              <Input
-                                value={state.value}
-                                onChange={(e) => handleChange(e.target.value)}
-                                onBlur={handleBlur}
-                                placeholder="Release date"
-                              />
-                            </div>
-                          )}
-                        </form.Field>
-                        <form.Field name="variant">
-                          {({ state, handleChange, handleBlur }) => (
-                            <div>
-                              <Label>Variant</Label>
-                              <Input
-                                value={state.value}
-                                onChange={(e) => handleChange(e.target.value)}
-                                onBlur={handleBlur}
-                                placeholder="Vinyle variant"
-                              />
-                            </div>
-                          )}
-                        </form.Field>
-                        <form.Field name="genres">
-                          {({ state, handleChange, handleBlur }) => (
-                            <div>
-                              <Label>Genres</Label>
-                              <Input
-                                value={state.value}
-                                onChange={(e) => handleChange(e.target.value)}
-                                onBlur={handleBlur}
-                                placeholder="Genres (comma separated)"
-                              />
-                            </div>
-                          )}
-                        </form.Field>
-                      </div>
-                      <div className="flex gap-4 pt-6 place-content-between">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setAlbum(undefined)}
-                        >
-                          Annuler
-                        </Button>
-                        <Button
-                          disabled={createAlbum.isPending}
-                          type="submit"
-                          className="gap-2"
-                        >
-                          {createAlbum.isPending ? (
-                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <>
-                              <Plus className="h-4 w-4" />
-                              Ajouter
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </form>
+                    <AddAlbumForm
+                      album={album}
+                      onSuccess={handleSuccess}
+                      onCancel={() => setAlbum(undefined)}
+                    />
                   </CardContent>
                 </Card>
               </div>

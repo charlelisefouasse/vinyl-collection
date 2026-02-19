@@ -14,7 +14,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model Album {
+  id           String   @id
+  name         String
+  image        String
+  release_date String
+  genres       String[]
+  variant      String?
+  artist       String
+}
+
+model WishlistAlbum {
   id           String   @id
   name         String
   image        String

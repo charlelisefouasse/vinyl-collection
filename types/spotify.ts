@@ -57,7 +57,7 @@ export type SpotifySearchResponse = {
 export type AlbumUI = Album;
 
 export const mapAlbumsToUI = (
-  response: SpotifySearchResponse
+  response: SpotifySearchResponse,
 ): Array<AlbumUI> => {
   return response.albums.items.map((album) => ({
     name: album.name,
