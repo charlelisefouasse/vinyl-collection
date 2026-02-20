@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, authClient } from "@/lib/auth-client";
-import { useForm } from "@tanstack/react-form";
+import { useForm, Controller } from "react-hook-form";
 import {
   Card,
   CardContent,
@@ -31,40 +31,56 @@ import {
   FieldSet,
 } from "@/components/ui/field";
 
+interface FormValues {
+  name: string;
+  username: string;
+}
+
 export default function OnboardingPage() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
 
-  const form = useForm({
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { isValid, isSubmitting, isValidating },
+  } = useForm<FormValues>({
     defaultValues: {
       name: "",
       username: "",
     },
-    onSubmit: async ({ value }) => {
-      try {
-        const { error } = await authClient.updateUser({
-          name: value.name,
-          username: value.username.toLowerCase().trim(),
-        });
-
-        if (error) {
-          toast.error(error.message || "Erreur lors de la mise à jour");
-          return;
-        }
-
-        toast.success("Profil configuré !");
-        router.replace("/");
-      } catch (err: any) {
-        toast.error(err.message || "Erreur inattendue");
-      }
-    },
   });
 
-  useEffect(() => {
-    if (session?.user?.name && !form.state.values.name) {
-      form.setFieldValue("name", session.user.name);
+  const onSubmit = async (value: FormValues) => {
+    try {
+      const { error } = await authClient.updateUser({
+        name: value.name,
+        username: value.username.toLowerCase().trim(),
+      });
+
+      if (error) {
+        toast.error(error.message || "Erreur lors de la mise à jour");
+        return;
+      }
+
+      toast.success("Profil configuré !");
+      router.replace("/");
+    } catch (err: any) {
+      toast.error(err.message || "Erreur inattendue");
     }
-  }, [session, form]);
+  };
+
+  const nameValue = watch("name");
+  useEffect(() => {
+    if (session?.user?.name && !nameValue) {
+      setValue("name", session.user.name, {
+        shouldValidate: true,
+        shouldTouch: true,
+      });
+    }
+  }, [session, setValue, nameValue]);
 
   if (isPending) {
     return (
@@ -73,6 +89,8 @@ export default function OnboardingPage() {
       </div>
     );
   }
+
+  const disabled = !isValid || isSubmitting || isValidating;
 
   return (
     <div className="flex min-h-dvh items-center justify-center p-4 flex-col gap-12">
@@ -87,60 +105,53 @@ export default function OnboardingPage() {
         <CardContent>
           <form
             id="onboarding-form"
-            onSubmit={() => {
-              form.handleSubmit();
-            }}
+            onSubmit={handleSubmit(onSubmit)}
             noValidate
             className="space-y-4"
           >
             <FieldGroup>
               <FieldSet>
-                <form.Field
+                <Controller
                   name="name"
-                  validators={{
-                    onBlur: ({ value }) =>
-                      !value.trim() ? "Le nom est requis" : undefined,
-                  }}
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched &&
-                      !!field.state.meta.errors.length;
-                    return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel>Nom</FieldLabel>
-                        <Input
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          onBlur={field.handleBlur}
-                          placeholder="Noah"
-                          aria-invalid={isInvalid}
-                        />
-                        {isInvalid && (
-                          <FieldError
-                            errors={field.state.meta.errors.map((err) => ({
-                              message: err?.toString() || "",
-                            }))}
-                          />
-                        )}
-                      </Field>
-                    );
-                  }}
+                  control={control}
+                  rules={{ required: "Le nom est requis" }}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>Nom</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        aria-invalid={fieldState.invalid}
+                        placeholder="Noah"
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
                 />
 
-                <form.Field
+                <Controller
                   name="username"
-                  validators={{
-                    onChange: ({ value }) => {
-                      if (value.length > 31)
-                        return "Trop long (max 31 caractères)";
-                      if (!/^[a-zA-Z0-9_]+$/.test(value) && value)
-                        return "Caractères invalides (lettres, chiffres, tirets du bas)";
-                      return undefined;
+                  control={control}
+                  rules={{
+                    required: "Le nom d'utilisateur est requis",
+                    minLength: {
+                      value: 3,
+                      message: "Top court (min 3 caractères)",
                     },
-                    onChangeAsyncDebounceMs: 500,
-                    onChangeAsync: async ({ value }) => {
+                    maxLength: {
+                      value: 31,
+                      message: "Trop long (max 31 caractères)",
+                    },
+                    pattern: {
+                      value: /^[a-zA-Z0-9_]+$/,
+                      message:
+                        "Caractères invalides (lettres, chiffres, tirets du bas)",
+                    },
+                    validate: async (value) => {
                       const cleanUsername = value.toLowerCase().trim();
-                      if (!cleanUsername) return undefined;
+                      if (!cleanUsername) return true;
                       try {
                         const { data, error } =
                           await authClient.isUsernameAvailable({
@@ -152,81 +163,56 @@ export default function OnboardingPage() {
                       } catch (e) {
                         return "Erreur lors de la vérification";
                       }
-                      return undefined;
-                    },
-                    onBlur: ({ value }) => {
-                      if (!value.trim())
-                        return "Le nom d'utilisateur est requis";
-                      if (value.length < 3)
-                        return "Top court (min 3 caractères)";
+                      return true;
                     },
                   }}
-                  children={(field) => {
-                    const isInvalid = !!field.state.meta.errors.length;
-                    const isChecking = field.state.meta.isValidating;
-                    const isValidAndChecked =
-                      field.state.meta.isTouched &&
-                      !isChecking &&
-                      !field.state.meta.errors.length &&
-                      field.state.value.length >= 3;
-
-                    return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel>Nom d'utilisateur</FieldLabel>
-                        <InputGroup>
-                          <InputGroupInput
-                            value={field.state.value}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            onBlur={field.handleBlur}
-                            placeholder="noahsebastian"
-                            aria-invalid={isInvalid}
-                          />
-                          <InputGroupAddon align="inline-end">
-                            {isChecking && (
-                              <Spinner className="text-muted-foreground" />
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>
+                        Nom d'utilisateur
+                      </FieldLabel>
+                      <InputGroup>
+                        <InputGroupInput
+                          {...field}
+                          id={field.name}
+                          aria-invalid={fieldState.invalid}
+                          placeholder="noahsebastian"
+                        />
+                        <InputGroupAddon align="inline-end">
+                          {isValidating && (
+                            <Spinner className="text-muted-foreground" />
+                          )}
+                          {fieldState.isTouched &&
+                            !isValidating &&
+                            !fieldState.invalid &&
+                            fieldState.isDirty && (
+                              <Check className="text-green-500 " />
                             )}
-                            {isValidAndChecked && (
-                              <Check className="text-green-500" />
-                            )}
-                            {isInvalid && <X className="text-destructive" />}
-                          </InputGroupAddon>
-                        </InputGroup>
-                        {isInvalid && (
-                          <FieldError
-                            errors={field.state.meta.errors.map((err) => ({
-                              message: err?.toString() || "",
-                            }))}
-                          />
-                        )}
-                      </Field>
-                    );
-                  }}
+                          {fieldState.invalid && (
+                            <X className="text-destructive" />
+                          )}
+                        </InputGroupAddon>
+                      </InputGroup>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
                 />
               </FieldSet>
             </FieldGroup>
           </form>
         </CardContent>
         <CardFooter>
-          <form.Subscribe
-            selector={(state) =>
-              [state.canSubmit, state.isSubmitting, state.values] as const
-            }
-            children={([canSubmit, isSubmitting, values]) => {
-              const hasRequired =
-                !!values.name?.trim() && !!values.username?.trim();
-              return (
-                <Button
-                  form="onboarding-form"
-                  type="submit"
-                  className="w-full"
-                  disabled={!canSubmit || isSubmitting || !hasRequired}
-                >
-                  Continuer
-                  {isSubmitting && <Spinner />}
-                </Button>
-              );
-            }}
-          />
+          <Button
+            form="onboarding-form"
+            type="submit"
+            className="w-full"
+            disabled={disabled}
+          >
+            Continuer
+            {isSubmitting && <Spinner className="ml-2  animate-spin" />}
+          </Button>
         </CardFooter>
       </Card>
     </div>

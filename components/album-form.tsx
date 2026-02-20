@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "@tanstack/react-form";
+import { useForm, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlbumUI } from "@/types/spotify";
@@ -31,9 +31,18 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
 
+interface FormValues {
+  name: string;
+  artist: string;
+  variant: string;
+  genres: string;
+  release_date: string;
+  type: "collection" | "wishlist";
+}
+
 interface AlbumFormProps {
   album: AlbumUI;
-  onSubmit: (paylaod: AlbumUI) => void;
+  onSubmit: (payload: AlbumUI) => void;
   onCancel?: () => void;
   isLoading?: boolean;
   mode?: "create" | "edit";
@@ -62,157 +71,145 @@ export function AlbumForm({
     deleteAlbum.mutate(album.id);
   };
 
-  const form = useForm({
+  const form = useForm<FormValues>({
+    mode: "onBlur",
     defaultValues: {
       name: album.name || "",
       artist: album.artist || "",
       variant: album.variant || "",
       genres: album.genres?.join(", ") || "",
       release_date: album.release_date || "",
-      type: album.type || "collection",
-    },
-    onSubmit: async ({ value }) => {
-      const payload = {
-        ...album,
-        ...value,
-        genres: value.genres
-          ? value.genres.split(",").map((g) => g.trim())
-          : [],
-        id: album.id || uuid(),
-      };
-      onSubmit(payload);
+      type: (album.type as any) || "collection",
     },
   });
 
-  const isSubmitting = form.state.isSubmitting || isLoading || isLoading;
+  const onFormSubmit = (value: FormValues) => {
+    const payload = {
+      ...album,
+      ...value,
+      genres: value.genres ? value.genres.split(",").map((g) => g.trim()) : [],
+      id: album.id || uuid(),
+    };
+    onSubmit(payload);
+  };
+
+  const isSubmitting = form.formState.isSubmitting || isLoading;
+  const disabled = !form.formState.isValid || isSubmitting;
 
   return (
     <form
-      onSubmit={() => {
-        form.handleSubmit();
-      }}
+      onSubmit={form.handleSubmit(onFormSubmit)}
       noValidate
       className="space-y-6"
     >
       <FieldGroup>
         <FieldSet>
-          <form.Field
+          <Controller
             name="name"
-            validators={{
-              onBlur: ({ value }) =>
-                !value ? "Le nom de l'album est requis" : undefined,
-            }}
-            children={(field) => {
-              const isInvalid =
-                field.state.meta.isTouched && !!field.state.meta.errors.length;
-              return (
-                <Field data-invalid={isInvalid}>
-                  <FieldLabel>Nom</FieldLabel>
-                  <Input
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    placeholder="Nom de l'album"
-                    aria-invalid={isInvalid}
-                  />
-                  {isInvalid && (
-                    <FieldError
-                      errors={field.state.meta.errors?.map((err) => ({
-                        message: err?.toString(),
-                      }))}
-                    />
-                  )}
-                </Field>
-              );
-            }}
-          />
-
-          <form.Field
-            name="artist"
-            validators={{
-              onBlur: ({ value }) =>
-                !value ? "Le nom de l'artiste est requis" : undefined,
-            }}
-            children={(field) => {
-              const isInvalid =
-                field.state.meta.isTouched && !!field.state.meta.errors.length;
-              return (
-                <Field data-invalid={isInvalid}>
-                  <FieldLabel>Artiste</FieldLabel>
-                  <Input
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    placeholder="Artistes (séparés par des virgules)"
-                    aria-invalid={isInvalid}
-                  />
-                  {isInvalid && (
-                    <FieldError
-                      errors={field.state.meta.errors?.map((err) => ({
-                        message: err?.toString(),
-                      }))}
-                    />
-                  )}
-                </Field>
-              );
-            }}
-          />
-
-          <form.Field
-            name="release_date"
-            children={(field) => (
-              <Field>
-                <FieldLabel>Date de sortie</FieldLabel>
+            control={form.control}
+            rules={{ required: "Le nom de l'album est requis" }}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Nom</FieldLabel>
                 <Input
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
+                  {...field}
+                  id={field.name}
+                  aria-invalid={fieldState.invalid}
+                  placeholder="Nom de l'album"
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="artist"
+            control={form.control}
+            rules={{ required: "Le nom de l'artiste est requis" }}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Artiste</FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  aria-invalid={fieldState.invalid}
+                  placeholder="Artistes (séparés par des virgules)"
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="release_date"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Date de sortie</FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  aria-invalid={fieldState.invalid}
                   placeholder="Date de sortie"
                 />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
 
-          <form.Field
+          <Controller
             name="variant"
-            children={(field) => (
-              <Field>
-                <FieldLabel>Variante</FieldLabel>
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Variante</FieldLabel>
                 <Input
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
+                  {...field}
+                  id={field.name}
+                  aria-invalid={fieldState.invalid}
                   placeholder="Variante du vinyle"
                 />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
 
-          <form.Field
+          <Controller
             name="genres"
-            children={(field) => (
-              <Field>
-                <FieldLabel>Genres</FieldLabel>
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Genres</FieldLabel>
                 <Input
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
+                  {...field}
+                  id={field.name}
+                  aria-invalid={fieldState.invalid}
                   placeholder="Genres (séparés par des virgules)"
                 />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
 
-          <form.Field
+          <Controller
             name="type"
-            children={(field) => (
-              <Field>
-                <FieldLabel>Type</FieldLabel>
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Type</FieldLabel>
                 <RadioGroup
-                  onValueChange={(val) =>
-                    field.handleChange(val as "collection" | "wishlist")
-                  }
-                  defaultValue={field.state.value}
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
                   className="flex gap-3"
                 >
                   <div className="flex items-center gap-2">
@@ -228,6 +225,9 @@ export function AlbumForm({
                     </FieldLabel>
                   </div>
                 </RadioGroup>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
@@ -243,7 +243,7 @@ export function AlbumForm({
         {mode === "edit" && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive">
+              <Button type="button" variant="destructive">
                 <Trash2 />
                 <span className="hidden md:flex">Supprimer</span>
                 {deleteAlbum.isPending && <Spinner />}
@@ -266,30 +266,18 @@ export function AlbumForm({
             </AlertDialogContent>
           </AlertDialog>
         )}
-        <form.Subscribe
-          selector={(state) =>
-            [state.canSubmit, state.isSubmitting, state.values] as const
-          }
-          children={([canSubmit, isSubmittingState, values]) => {
-            const hasRequired =
-              !!values.name?.trim() && !!values.artist?.trim();
-            const disabled =
-              !canSubmit || isSubmitting || isSubmittingState || !hasRequired;
-            return (
-              <Button type="submit" disabled={disabled}>
-                {mode === "create" ? (
-                  <>
-                    <Plus />
-                    Ajouter
-                  </>
-                ) : (
-                  "Enregistrer"
-                )}
-                {isSubmittingState && <Spinner />}
-              </Button>
-            );
-          }}
-        />
+
+        <Button type="submit" disabled={disabled}>
+          {mode === "create" ? (
+            <>
+              <Plus />
+              Ajouter
+            </>
+          ) : (
+            "Enregistrer"
+          )}
+          {isSubmitting && <Spinner />}
+        </Button>
       </div>
     </form>
   );

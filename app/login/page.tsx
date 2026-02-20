@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { LogoFull } from "@/components/ui/logo-full";
-import { useForm } from "@tanstack/react-form";
+import { useForm, Controller } from "react-hook-form";
 import {
   Field,
   FieldError,
@@ -35,58 +35,76 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const signInForm = useForm({
+  const {
+    control: controlSignIn,
+    handleSubmit: handleSubmitSignIn,
+    formState: {
+      isValid: isSignInValid,
+      isSubmitting: isSignInSubmitting,
+      isDirty: isSignInDirty,
+    },
+  } = useForm({
     defaultValues: {
       email: "",
       password: "",
     },
-    onSubmit: async ({ value }) => {
-      setLoading(true);
-      await signIn.email({
-        email: value.email,
-        password: value.password,
-        callbackURL: "/",
-        fetchOptions: {
-          onError: (ctx) => {
-            toast.error(ctx.error.message);
-            setLoading(false);
-          },
-          onSuccess: () => {
-            router.push("/");
-          },
-        },
-      });
-    },
   });
 
-  const signUpForm = useForm({
+  const onSignInSubmit = async (value: any) => {
+    setLoading(true);
+    await signIn.email({
+      email: value.email,
+      password: value.password,
+      callbackURL: "/",
+      fetchOptions: {
+        onError: (ctx) => {
+          toast.error(ctx.error.message);
+          setLoading(false);
+        },
+        onSuccess: () => {
+          router.push("/");
+        },
+      },
+    });
+  };
+
+  const {
+    control: controlSignUp,
+    handleSubmit: handleSubmitSignUp,
+    formState: {
+      isValid: isSignUpValid,
+      isSubmitting: isSignUpSubmitting,
+      isValidating: isSignUpValidating,
+      isDirty: isSignUpDirty,
+    },
+  } = useForm({
     defaultValues: {
       name: "",
       username: "",
       email: "",
       password: "",
     },
-    onSubmit: async ({ value }) => {
-      setLoading(true);
-      await signUp.email({
-        email: value.email,
-        password: value.password,
-        name: value.name,
-        // @ts-ignore
-        username: value.username.toLowerCase().trim(),
-        callbackURL: "/",
-        fetchOptions: {
-          onError: (ctx) => {
-            toast.error(ctx.error.message);
-            setLoading(false);
-          },
-          onSuccess: () => {
-            setLoading(false);
-          },
-        },
-      });
-    },
   });
+
+  const onSignUpSubmit = async (value: any) => {
+    setLoading(true);
+    await signUp.email({
+      email: value.email,
+      password: value.password,
+      name: value.name,
+      username: value.username.toLowerCase().trim(),
+      callbackURL: "/",
+      fetchOptions: {
+        onError: (ctx) => {
+          toast.error(ctx.error.message);
+          setLoading(false);
+        },
+        onSuccess: () => {
+          setLoading(false);
+        },
+      },
+    });
+  };
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -101,6 +119,15 @@ export default function LoginPage() {
       },
     });
   };
+
+  const signInDisabled =
+    (!isSignInValid && isSignInDirty) || isSignInSubmitting || loading;
+
+  const signUpDisabled =
+    (!isSignUpValid && isSignUpDirty) ||
+    isSignUpSubmitting ||
+    loading ||
+    isSignUpValidating;
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 flex-col gap-12">
@@ -119,110 +146,68 @@ export default function LoginPage() {
             <CardContent>
               <form
                 id="signin-form"
-                onSubmit={() => {
-                  signInForm.handleSubmit();
-                }}
+                onSubmit={handleSubmitSignIn(onSignInSubmit)}
                 noValidate
                 className="space-y-4"
               >
                 <FieldGroup>
                   <FieldSet>
-                    <signInForm.Field
+                    <Controller
                       name="email"
-                      validators={{
-                        onBlur: ({ value }) =>
-                          !value ? "L'email est requis" : undefined,
-                      }}
-                      children={(field) => {
-                        const isInvalid =
-                          field.state.meta.isTouched &&
-                          !!field.state.meta.errors.length;
-                        return (
-                          <Field data-invalid={isInvalid}>
-                            <FieldLabel>Email</FieldLabel>
-                            <Input
-                              type="email"
-                              value={field.state.value}
-                              onChange={(e) =>
-                                field.handleChange(e.target.value)
-                              }
-                              onBlur={field.handleBlur}
-                              placeholder="noah@badomens.com"
-                              aria-invalid={isInvalid}
-                            />
-                            {isInvalid && (
-                              <FieldError
-                                errors={field.state.meta.errors.map((err) => ({
-                                  message: err?.toString() || "",
-                                }))}
-                              />
-                            )}
-                          </Field>
-                        );
-                      }}
+                      control={controlSignIn}
+                      rules={{ required: "L'email est requis" }}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                          <Input
+                            {...field}
+                            id={field.name}
+                            type="email"
+                            aria-invalid={fieldState.invalid}
+                            placeholder="noah@badomens.com"
+                          />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
                     />
-                    <signInForm.Field
+
+                    <Controller
                       name="password"
-                      validators={{
-                        onBlur: ({ value }) =>
-                          !value ? "Le mot de passe est requis" : undefined,
-                      }}
-                      children={(field) => {
-                        const isInvalid =
-                          field.state.meta.isTouched &&
-                          !!field.state.meta.errors.length;
-                        return (
-                          <Field data-invalid={isInvalid}>
-                            <FieldLabel>Mot de passe</FieldLabel>
-                            <Input
-                              type="password"
-                              value={field.state.value}
-                              onChange={(e) =>
-                                field.handleChange(e.target.value)
-                              }
-                              onBlur={field.handleBlur}
-                              aria-invalid={isInvalid}
-                            />
-                            {isInvalid && (
-                              <FieldError
-                                errors={field.state.meta.errors.map((err) => ({
-                                  message: err?.toString() || "",
-                                }))}
-                              />
-                            )}
-                          </Field>
-                        );
-                      }}
+                      control={controlSignIn}
+                      rules={{ required: "Le mot de passe est requis" }}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={field.name}>
+                            Mot de passe
+                          </FieldLabel>
+                          <Input
+                            {...field}
+                            id={field.name}
+                            type="password"
+                            aria-invalid={fieldState.invalid}
+                          />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
                     />
                   </FieldSet>
                 </FieldGroup>
               </form>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <signInForm.Subscribe
-                selector={(state) =>
-                  [state.canSubmit, state.isSubmitting, state.values] as const
-                }
-                children={([canSubmit, isSubmitting, values]) => {
-                  const hasRequired =
-                    !!values.email?.trim() && !!values.password?.trim();
-                  return (
-                    <Button
-                      form="signin-form"
-                      type="submit"
-                      className="w-full"
-                      disabled={
-                        !canSubmit || isSubmitting || loading || !hasRequired
-                      }
-                    >
-                      Se connecter
-                      {isSubmitting && (
-                        <Spinner className="ml-2 h-4 w-4 animate-spin" />
-                      )}
-                    </Button>
-                  );
-                }}
-              />
+              <Button
+                form="signin-form"
+                type="submit"
+                className="w-full"
+                disabled={signInDisabled}
+              >
+                Se connecter
+                {isSignInSubmitting && <Spinner />}
+              </Button>
               <div className="flex justify-center">
                 <span className="px-2 text-muted-foreground text-xs">OU</span>
               </div>
@@ -239,7 +224,7 @@ export default function LoginPage() {
                   />
                 </svg>
                 Se connecter avec Google
-                {loading && <Spinner />}
+                {loading && <Spinner className="ml-2 " />}
               </Button>
             </CardFooter>
           </Card>
@@ -253,62 +238,53 @@ export default function LoginPage() {
             <CardContent>
               <form
                 id="signup-form"
-                onSubmit={(e) => {
-                  signUpForm.handleSubmit();
-                }}
+                onSubmit={handleSubmitSignUp(onSignUpSubmit)}
                 noValidate
                 className="space-y-4"
               >
                 <FieldGroup>
                   <FieldSet>
-                    <signUpForm.Field
+                    <Controller
                       name="name"
-                      validators={{
-                        onBlur: ({ value }) =>
-                          !value.trim() ? "Le nom est requis" : undefined,
-                      }}
-                      children={(field) => {
-                        const isInvalid =
-                          field.state.meta.isTouched &&
-                          !!field.state.meta.errors.length;
-                        return (
-                          <Field data-invalid={isInvalid}>
-                            <FieldLabel>Nom</FieldLabel>
-                            <Input
-                              value={field.state.value}
-                              onChange={(e) =>
-                                field.handleChange(e.target.value)
-                              }
-                              onBlur={field.handleBlur}
-                              placeholder="Noah"
-                              aria-invalid={isInvalid}
-                            />
-                            {isInvalid && (
-                              <FieldError
-                                errors={field.state.meta.errors.map((err) => ({
-                                  message: err?.toString() || "",
-                                }))}
-                              />
-                            )}
-                          </Field>
-                        );
-                      }}
+                      control={controlSignUp}
+                      rules={{ required: "Le nom est requis" }}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={field.name}>Nom</FieldLabel>
+                          <Input
+                            {...field}
+                            id={field.name}
+                            aria-invalid={fieldState.invalid}
+                            placeholder="Noah"
+                          />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
                     />
 
-                    <signUpForm.Field
+                    <Controller
                       name="username"
-                      validators={{
-                        onChange: ({ value }) => {
-                          if (value.length > 31)
-                            return "Trop long (max 31 caractères)";
-                          if (!/^[a-zA-Z0-9_]+$/.test(value) && value)
-                            return "Caractères invalides (lettres, chiffres, tirets du bas)";
-                          return undefined;
+                      control={controlSignUp}
+                      rules={{
+                        required: "Le nom d'utilisateur est requis",
+                        minLength: {
+                          value: 3,
+                          message: "Top court (min 3 caractères)",
                         },
-                        onChangeAsyncDebounceMs: 500,
-                        onChangeAsync: async ({ value }) => {
+                        maxLength: {
+                          value: 31,
+                          message: "Trop long (max 31 caractères)",
+                        },
+                        pattern: {
+                          value: /^[a-zA-Z0-9_]+$/,
+                          message:
+                            "Caractères invalides (lettres, chiffres, tirets du bas)",
+                        },
+                        validate: async (value) => {
                           const cleanUsername = value.toLowerCase().trim();
-                          if (!cleanUsername) return undefined;
+                          if (!cleanUsername) return true;
                           try {
                             const { data, error } =
                               await authClient.isUsernameAvailable({
@@ -320,167 +296,111 @@ export default function LoginPage() {
                           } catch (e) {
                             return "Erreur lors de la vérification";
                           }
-                          return undefined;
-                        },
-                        onBlur: ({ value }) => {
-                          if (!value.trim())
-                            return "Le nom d'utilisateur est requis";
-                          if (value.length < 3)
-                            return "Top court (min 3 caractères)";
+                          return true;
                         },
                       }}
-                      children={(field) => {
-                        const isInvalid = !!field.state.meta.errors.length;
-                        const isChecking = field.state.meta.isValidating;
-                        const isValidAndChecked =
-                          field.state.meta.isTouched &&
-                          !isChecking &&
-                          !field.state.meta.errors.length &&
-                          field.state.value.length >= 3;
-
-                        return (
-                          <Field data-invalid={isInvalid}>
-                            <FieldLabel>Nom d'utilisateur</FieldLabel>
-                            <InputGroup>
-                              <InputGroupInput
-                                value={field.state.value}
-                                onChange={(e) =>
-                                  field.handleChange(e.target.value)
-                                }
-                                onBlur={field.handleBlur}
-                                placeholder="noahsebastian"
-                                aria-invalid={isInvalid}
-                              />
-                              <InputGroupAddon align="inline-end">
-                                {isChecking && (
-                                  <Spinner className="text-muted-foreground animate-spin" />
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={field.name}>
+                            Nom d'utilisateur
+                          </FieldLabel>
+                          <InputGroup>
+                            <InputGroupInput
+                              {...field}
+                              id={field.name}
+                              aria-invalid={fieldState.invalid}
+                              placeholder="noahsebastian"
+                            />
+                            <InputGroupAddon align="inline-end">
+                              {isSignUpValidating && (
+                                <Spinner className="text-muted-foreground animate-spin " />
+                              )}
+                              {fieldState.isTouched &&
+                                !isSignUpValidating &&
+                                !fieldState.invalid &&
+                                fieldState.isDirty && (
+                                  <Check className="text-green-500 " />
                                 )}
-                                {isValidAndChecked && (
-                                  <Check className="text-green-500" />
-                                )}
-                                {isInvalid && (
-                                  <X className="text-destructive" />
-                                )}
-                              </InputGroupAddon>
-                            </InputGroup>
-                            {isInvalid && (
-                              <FieldError
-                                errors={field.state.meta.errors.map((err) => ({
-                                  message: err?.toString() || "",
-                                }))}
-                              />
-                            )}
-                          </Field>
-                        );
-                      }}
+                              {fieldState.invalid && (
+                                <X className="text-destructive " />
+                              )}
+                            </InputGroupAddon>
+                          </InputGroup>
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
                     />
 
-                    <signUpForm.Field
+                    <Controller
                       name="email"
-                      validators={{
-                        onBlur: ({ value }) => {
-                          if (!value) return "L'email est requis";
-                          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
-                            return "Adresse email invalide";
-                          return undefined;
+                      control={controlSignUp}
+                      rules={{
+                        required: "L'email est requis",
+                        pattern: {
+                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                          message: "Adresse email invalide",
                         },
                       }}
-                      children={(field) => {
-                        const isInvalid =
-                          field.state.meta.isTouched &&
-                          !!field.state.meta.errors.length;
-                        return (
-                          <Field data-invalid={isInvalid}>
-                            <FieldLabel>Email</FieldLabel>
-                            <Input
-                              type="email"
-                              value={field.state.value}
-                              onChange={(e) =>
-                                field.handleChange(e.target.value)
-                              }
-                              onBlur={field.handleBlur}
-                              placeholder="noah@badomens.com"
-                              aria-invalid={isInvalid}
-                            />
-                            {isInvalid && (
-                              <FieldError
-                                errors={field.state.meta.errors.map((err) => ({
-                                  message: err?.toString() || "",
-                                }))}
-                              />
-                            )}
-                          </Field>
-                        );
-                      }}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                          <Input
+                            {...field}
+                            id={field.name}
+                            type="email"
+                            aria-invalid={fieldState.invalid}
+                            placeholder="noah@badomens.com"
+                          />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
                     />
 
-                    <signUpForm.Field
+                    <Controller
                       name="password"
-                      validators={{
-                        onBlur: ({ value }) => {
-                          if (!value) return "Le mot de passe est requis";
-                          if (value.length < 8)
-                            return "8 caractères minimum requis";
-                          return undefined;
+                      control={controlSignUp}
+                      rules={{
+                        required: "Le mot de passe est requis",
+                        minLength: {
+                          value: 8,
+                          message: "8 caractères minimum requis",
                         },
                       }}
-                      children={(field) => {
-                        const isInvalid =
-                          field.state.meta.isTouched &&
-                          !!field.state.meta.errors.length;
-                        return (
-                          <Field data-invalid={isInvalid}>
-                            <FieldLabel>Mot de passe</FieldLabel>
-                            <Input
-                              type="password"
-                              value={field.state.value}
-                              onChange={(e) =>
-                                field.handleChange(e.target.value)
-                              }
-                              onBlur={field.handleBlur}
-                              aria-invalid={isInvalid}
-                            />
-                            {isInvalid && (
-                              <FieldError
-                                errors={field.state.meta.errors.map((err) => ({
-                                  message: err?.toString() || "",
-                                }))}
-                              />
-                            )}
-                          </Field>
-                        );
-                      }}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={field.name}>
+                            Mot de passe
+                          </FieldLabel>
+                          <Input
+                            {...field}
+                            id={field.name}
+                            type="password"
+                            aria-invalid={fieldState.invalid}
+                          />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
                     />
                   </FieldSet>
                 </FieldGroup>
               </form>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <signUpForm.Subscribe
-                selector={(state) =>
-                  [state.canSubmit, state.isSubmitting, state.values] as const
-                }
-                children={([canSubmit, isSubmitting, values]) => {
-                  const hasRequired =
-                    !!values.name?.trim() &&
-                    !!values.username?.trim() &&
-                    !!values.email?.trim() &&
-                    !!values.password?.trim();
-                  return (
-                    <Button
-                      form="signup-form"
-                      type="submit"
-                      className="w-full"
-                      disabled={
-                        !canSubmit || isSubmitting || loading || !hasRequired
-                      }
-                    >
-                      S'inscrire
-                      {isSubmitting && <Spinner />}
-                    </Button>
-                  );
-                }}
-              />
+              <Button
+                form="signup-form"
+                type="submit"
+                className="w-full"
+                disabled={signUpDisabled}
+              >
+                S'inscrire
+                {isSignUpSubmitting && <Spinner />}
+              </Button>
 
               <div className="flex justify-center">
                 <span className="px-2 text-muted-foreground text-xs">OU</span>
