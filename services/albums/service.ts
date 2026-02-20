@@ -11,15 +11,19 @@ import {
 
 // Fetches albums from local database
 export const getVinylsQueryOptions = (
+  username: string,
   searchTerm?: string,
   type: string = "collection",
 ) => ({
-  queryKey: searchTerm ? ["vinyls", type, searchTerm] : ["vinyls", type],
+  queryKey: searchTerm
+    ? ["vinyls", type, searchTerm, username]
+    : ["vinyls", type, username],
   queryFn: async () => {
     const params = new URLSearchParams();
     if (searchTerm) params.append("s", searchTerm);
     params.append("type", type);
-    return await fetch(`/api/vinyl?${params.toString()}`).then((res) =>
+    if (username) params.append("u", username);
+    return await fetch(`/api/vinyls?${params.toString()}`).then((res) =>
       res.json(),
     );
   },
@@ -27,12 +31,16 @@ export const getVinylsQueryOptions = (
   refetchOnWindowFocus: false,
 });
 
-export const useGetCollection = (searchTerm?: string) => {
-  return useQuery<AlbumUI[]>(getVinylsQueryOptions(searchTerm, "collection"));
+export const useGetCollection = (username: string, searchTerm?: string) => {
+  return useQuery<AlbumUI[]>(
+    getVinylsQueryOptions(username, searchTerm, "collection"),
+  );
 };
 
-export const useGetWishlist = (searchTerm?: string) => {
-  return useQuery<AlbumUI[]>(getVinylsQueryOptions(searchTerm, "wishlist"));
+export const useGetWishlist = (username: string, searchTerm?: string) => {
+  return useQuery<AlbumUI[]>(
+    getVinylsQueryOptions(username, searchTerm, "wishlist"),
+  );
 };
 
 export const useGetAlbum = (id: string) =>

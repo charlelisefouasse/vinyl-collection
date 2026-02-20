@@ -55,6 +55,7 @@ export type SpotifySearchResponse = {
 };
 
 export type AlbumUI = Album;
+
 export function mapAlbumsToUI(response: SpotifySearchResponse): AlbumUI[] {
   return response.albums.items.map((album) => ({
     id: uuid(),
@@ -65,5 +66,6 @@ export function mapAlbumsToUI(response: SpotifySearchResponse): AlbumUI[] {
     variant: null,
     genres: [],
     type: "collection", // Default to collection for Spotify search results
+    userId: "",
   }));
 }

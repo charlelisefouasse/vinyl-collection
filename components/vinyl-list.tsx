@@ -10,9 +10,10 @@ import { UseQueryResult } from "@tanstack/react-query";
 
 interface VinylListProps {
   query: UseQueryResult<AlbumUI[]>;
+  isOwner?: boolean;
 }
 
-export function VinylList({ query }: VinylListProps) {
+export function VinylList({ query, isOwner }: VinylListProps) {
   if (query.isLoading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
@@ -59,7 +60,11 @@ export function VinylList({ query }: VinylListProps) {
                 className="p-0 rounded-2xl"
                 showCloseButton={false}
               >
-                <AlbumCard album={album} isInModal showAdminControls />
+                <AlbumCard
+                  album={album}
+                  isInModal
+                  showAdminControls={isOwner}
+                />
               </DialogContent>
             </Dialog>
           </div>

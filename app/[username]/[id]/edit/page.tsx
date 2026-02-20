@@ -6,45 +6,48 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGetAlbum, useUpdateAlbum } from "@/services/albums/service";
 
-import { ArrowLeft, Loader2 } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { ArrowLeft } from "lucide-react";
+import { useSession } from "@/lib/auth-client";
 import Image from "next/image";
 import Link from "next/link";
-import { redirect, useParams, useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useEffect } from "react";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function EditAlbumPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
 
-  const session = useSession({
-    required: true,
-    onUnauthenticated() {
-      redirect("/login");
-    },
-  });
+  const session = useSession();
+
+  useEffect(() => {
+    if (!session.isPending && !session.data) {
+      router.push("/login");
+    }
+  }, [session.data, session.isPending, router]);
 
   const updateAlbum = useUpdateAlbum({
     onError: (error) => {
       toast.error(
         error instanceof Error
           ? error.message
-          : "An error occurred while updating the album",
+          : "Une erreur est survenue lors de la mise à jour de l'album",
       );
     },
     onSuccess: () => {
-      toast.success("Album modified successfully!");
+      toast.success("Album modifié avec succès !");
       router.back();
     },
   });
 
   const album = useGetAlbum(id);
 
-  if (session.status === "loading" || album.isLoading) {
+  if (session.isPending || album.isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <Spinner className="h-8 w-8" />
       </div>
     );
   }
@@ -62,14 +65,19 @@ export default function EditAlbumPage() {
 
   return (
     <>
-      <Header>
+      <Header hideUserDropdown hideLogo>
         <div className="flex items-center gap-4">
-          <Button variant="ghost" asChild className="gap-2">
-            <Link href="/">
-              <ArrowLeft />
-            </Link>
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            size="icon"
+            className="shrink-0"
+          >
+            <ArrowLeft />
           </Button>
-          <h1 className="text-2xl font-bold">Modifier l'album</h1>
+          <h1 className="text-xl md:text-2xl font-bold truncate">
+            Modifier l'album
+          </h1>
         </div>
       </Header>
       <main className="container mx-auto px-4 py-8">
@@ -102,7 +110,7 @@ export default function EditAlbumPage() {
           </Card>
 
           <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-0 shadow-md">
-            <CardContent className="pt-6">
+            <CardContent>
               <AlbumForm
                 album={album.data}
                 mode="edit"

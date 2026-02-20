@@ -10,6 +10,11 @@ const userData: Prisma.AlbumCreateInput[] = [
     artist: "Bad Omens",
     release_date: "2022-02-25",
     variant: "Argent",
+    user: {
+      connect: {
+        email: "trendup27@gmail.com", // You need an existing user. We use connect syntax here
+      },
+    },
   },
 ];
 

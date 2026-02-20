@@ -3,8 +3,9 @@ import { Card, CardContent, CardProps } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { AlbumUI } from "@/types/spotify";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { Edit } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -21,8 +22,12 @@ export const AlbumCard = ({
   showAdminControls = false,
   ...rest
 }: AlbumCardProps) => {
-  const { data: session } = useSession();
-  const isAdmin = session?.user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+  const session = useSession();
+  const params = useParams();
+  const username = params.username as string;
+  const user = session.data?.user as { username?: string } | undefined;
+
+  const isOwner = user?.username === username;
 
   return (
     <Card
@@ -62,7 +67,7 @@ export const AlbumCard = ({
         </div>
 
         <div className="space-y-1">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between">
             <h2
               className={cn(
                 "font-semibold text-base md:text-lg leading-tight line-clamp-2",
@@ -73,7 +78,7 @@ export const AlbumCard = ({
             >
               {album.name}
             </h2>
-            {isAdmin && showAdminControls && (
+            {isOwner && showAdminControls && (
               <div
                 className="flex gap-2 mt-2"
                 onClick={(e) => e.stopPropagation()}
@@ -84,7 +89,7 @@ export const AlbumCard = ({
                   asChild
                   className="h-8 w-8"
                 >
-                  <Link href={`/edit/${album.id}`}>
+                  <Link href={`${username}/${album.id}/edit`}>
                     <Edit className="h-4 w-4" />
                   </Link>
                 </Button>
