@@ -1,54 +1,17 @@
 import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { authConfig } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { AlbumUI } from "@/types/spotify";
-import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
-export async function GET(req: NextRequest) {
-  const searchParams = req.nextUrl.searchParams;
-  const searchTerm = searchParams.get("s");
-  const type = searchParams.get("type") || "collection";
-
-  const vinyls = await prisma.album.findMany({
-    where: {
-      AND: [
-        { type: type },
-        searchTerm
-          ? {
-              OR: [
-                {
-                  name: {
-                    contains: searchTerm,
-                    mode: "insensitive",
-                  },
-                },
-                {
-                  artist: {
-                    contains: searchTerm,
-                    mode: "insensitive",
-                  },
-                },
-              ],
-            }
-          : {},
-      ],
-    },
-    orderBy: [{ artist: "asc" }, { release_date: "asc" }],
-  });
-
-  return NextResponse.json(vinyls);
-}
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authConfig);
+  const session = await auth.api.getSession({
+    headers: req.headers,
+  });
 
-  if (!session?.user?.email) {
+  if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (session.user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   try {
@@ -61,11 +24,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Check auth again defensively
+    if (!session || !session.user || !session.user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Force userId to match the current session user
+    const albumData = {
+      ...data,
+      userId: session.user.id,
+    };
+
     const created = await prisma.album.create({
-      data,
+      data: albumData,
     });
 
     revalidatePath("/");
+    // @ts-ignore
+    if (session.user.username) {
+      // @ts-ignore
+      revalidatePath(`/${session.user.username}`);
+    }
 
     return NextResponse.json(
       { success: true, album: created },

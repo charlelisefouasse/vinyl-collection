@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { authConfig } from "@/lib/auth";
-import { getServerSession } from "next-auth";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 export async function GET(
@@ -35,23 +35,39 @@ export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
-  const session = await getServerSession(authConfig);
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-  if (!session?.user?.email) {
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (session.user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   try {
     const { id } = await context.params;
+
+    // Authorization Check
+    const album = await prisma.album.findUnique({
+      where: { id },
+      select: { userId: true },
+    });
+
+    if (!album) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    if (album.userId !== session.user.id) {
+      return NextResponse.json(
+        { error: "Forbidden: You do not own this album" },
+        { status: 403 },
+      );
+    }
+
     const data = await req.json();
 
     const updated = await prisma.album.update({
       where: { id },
-      data,
+      data: { ...data, userId: album.userId },
     });
 
     revalidatePath("/");
@@ -76,18 +92,33 @@ export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
-  const session = await getServerSession(authConfig);
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-  if (!session?.user?.email) {
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (session.user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   try {
     const { id } = await context.params;
+
+    // Authorization Check
+    const album = await prisma.album.findUnique({
+      where: { id },
+      select: { userId: true },
+    });
+
+    if (!album) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    if (album.userId !== session.user.id) {
+      return NextResponse.json(
+        { error: "Forbidden: You do not own this album" },
+        { status: 403 },
+      );
+    }
 
     await prisma.album.delete({
       where: { id },
