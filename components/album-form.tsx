@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AlbumUI } from "@/types/spotify";
 import { v4 as uuid } from "uuid";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import {
   Field,
   FieldError,
@@ -33,6 +33,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Spinner } from "@/components/ui/spinner";
 
 interface AlbumFormProps {
   album: AlbumUI;
@@ -98,25 +99,25 @@ export function AlbumForm({
       }}
       className="space-y-6"
     >
-      <FieldSet>
-        <FieldGroup>
+      <FieldGroup>
+        <FieldSet>
           <form.Field
             name="name"
             validators={{
               onChange: ({ value }) =>
-                !value ? "Album name is required" : undefined,
+                !value ? "Le nom de l'album est requis" : undefined,
             }}
             children={(field) => {
               const isInvalid =
                 field.state.meta.isTouched && !!field.state.meta.errors.length;
               return (
                 <Field data-invalid={isInvalid}>
-                  <FieldLabel>Name</FieldLabel>
+                  <FieldLabel>Nom</FieldLabel>
                   <Input
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
-                    placeholder="Album name"
+                    placeholder="Nom de l'album"
                     aria-invalid={isInvalid}
                   />
                   {isInvalid && (
@@ -135,19 +136,19 @@ export function AlbumForm({
             name="artist"
             validators={{
               onChange: ({ value }) =>
-                !value ? "Artist name is required" : undefined,
+                !value ? "Le nom de l'artiste est requis" : undefined,
             }}
             children={(field) => {
               const isInvalid =
                 field.state.meta.isTouched && !!field.state.meta.errors.length;
               return (
                 <Field data-invalid={isInvalid}>
-                  <FieldLabel>Artist</FieldLabel>
+                  <FieldLabel>Artiste</FieldLabel>
                   <Input
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
-                    placeholder="Artists (comma separated)"
+                    placeholder="Artistes (séparés par des virgules)"
                     aria-invalid={isInvalid}
                   />
                   {isInvalid && (
@@ -166,12 +167,12 @@ export function AlbumForm({
             name="release_date"
             children={(field) => (
               <Field>
-                <FieldLabel>Release Date</FieldLabel>
+                <FieldLabel>Date de sortie</FieldLabel>
                 <Input
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
                   onBlur={field.handleBlur}
-                  placeholder="Release date"
+                  placeholder="Date de sortie"
                 />
               </Field>
             )}
@@ -181,12 +182,12 @@ export function AlbumForm({
             name="variant"
             children={(field) => (
               <Field>
-                <FieldLabel>Variant</FieldLabel>
+                <FieldLabel>Variante</FieldLabel>
                 <Input
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
                   onBlur={field.handleBlur}
-                  placeholder="Vinyle variant"
+                  placeholder="Variante du vinyle"
                 />
               </Field>
             )}
@@ -201,7 +202,7 @@ export function AlbumForm({
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
                   onBlur={field.handleBlur}
-                  placeholder="Genres (comma separated)"
+                  placeholder="Genres (séparés par des virgules)"
                 />
               </Field>
             )}
@@ -235,20 +236,22 @@ export function AlbumForm({
               </Field>
             )}
           />
-        </FieldGroup>
-      </FieldSet>
+        </FieldSet>
+      </FieldGroup>
 
       <div className="flex justify-end gap-3">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Annuler
+          </Button>
+        )}
         {mode === "edit" && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive">
-                {deleteAlbum.isPending ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  <Trash2 />
-                )}
-                Supprimer
+                <Trash2 />
+                <span className="hidden md:flex">Supprimer</span>
+                {deleteAlbum.isPending && <Spinner />}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -268,13 +271,7 @@ export function AlbumForm({
             </AlertDialogContent>
           </AlertDialog>
         )}
-        {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Annuler
-          </Button>
-        )}
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className="animate-spin" />}
           {mode === "create" ? (
             <>
               <Plus />
@@ -283,6 +280,7 @@ export function AlbumForm({
           ) : (
             "Enregistrer"
           )}
+          {isSubmitting && <Spinner />}
         </Button>
       </div>
     </form>
