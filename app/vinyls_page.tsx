@@ -4,39 +4,73 @@ import { useGetCollection, useGetWishlist } from "@/services/albums/service";
 
 import { Header } from "@/components/header";
 import { Input } from "@/components/ui/input";
-import { Music } from "lucide-react";
+import { Music, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VinylList } from "@/components/vinyl-list";
+import { useSession } from "@/lib/auth-client";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 
-function WishlistTab({ searchTerm }: { searchTerm: string }) {
-  const wishlist = useGetWishlist(searchTerm);
+function WishlistTab({
+  searchTerm,
+  username,
+  isOwner,
+}: {
+  searchTerm: string;
+  username: string;
+  isOwner?: boolean;
+}) {
+  const wishlist = useGetWishlist(username, searchTerm);
 
-  return <VinylList query={wishlist} />;
+  return <VinylList query={wishlist} isOwner={isOwner} />;
 }
-function CollectionTab({ searchTerm }: { searchTerm: string }) {
-  const collection = useGetCollection(searchTerm);
+function CollectionTab({
+  searchTerm,
+  username,
+  isOwner,
+}: {
+  searchTerm: string;
+  username: string;
+  isOwner?: boolean;
+}) {
+  const collection = useGetCollection(username, searchTerm);
 
-  return <VinylList query={collection} />;
+  return <VinylList query={collection} isOwner={isOwner} />;
 }
 
-export default function VinylsPage() {
+interface VinylsPageProps {
+  username?: string;
+  name?: string;
+}
+
+export default function VinylsPage({ username, name }: VinylsPageProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [search] = useDebounce(searchTerm, 500);
-  const vinyls = useGetCollection();
+  const vinyls = useGetCollection(username ?? "");
+  const session = useSession();
+  const user = session?.data?.user as { username?: string } | undefined;
+
+  const isOwner = user?.username === username;
+  const displayName = name || username;
+
+  if (!username) {
+    return null;
+  }
 
   return (
     <div>
       <Header>
-        <div className="flex gap-3 items-center">
-          <div className="p-2 bg-primary/10 rounded-lg h-10">
-            <Music className="h-6 w-6 text-primary" />
-          </div>
-
+        <div className="flex flex-1 justify-between items-center">
           <div>
             <h1 className="text-lg md:text-2xl font-bold">
-              La collection de Charlélise
+              {isOwner ? "Ma collection" : `Collection de ${displayName}`}
             </h1>
             {vinyls.data && (
               <p className="text-sm md:text-base text-muted-foreground">
@@ -45,6 +79,14 @@ export default function VinylsPage() {
               </p>
             )}
           </div>
+          {isOwner && (
+            <Button asChild size="sm" className="gap-2">
+              <Link href={`/${username}/create`}>
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Ajouter</span>
+              </Link>
+            </Button>
+          )}
         </div>
       </Header>
 
@@ -58,23 +100,36 @@ export default function VinylsPage() {
               </TabsList>
             </div>
 
-            <Input
-              type="text"
-              name="search"
-              className="max-w-md w-full"
-              placeholder="Rechercher un album ou un artiste..."
-              defaultValue={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            <InputGroup className="max-w-2xl">
+              <InputGroupAddon>
+                <Search />
+              </InputGroupAddon>
+              <InputGroupInput
+                type="text"
+                name="search"
+                placeholder="Rechercher un album ou un artiste..."
+                defaultValue={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </InputGroup>
+
             <div className="flex-1" />
           </div>
 
           <TabsContent value="collection" className="mt-0">
-            <CollectionTab searchTerm={search} />
+            <CollectionTab
+              searchTerm={search}
+              username={username}
+              isOwner={isOwner}
+            />
           </TabsContent>
 
           <TabsContent value="wishlist" className="mt-0">
-            <WishlistTab searchTerm={search} />
+            <WishlistTab
+              searchTerm={search}
+              username={username}
+              isOwner={isOwner}
+            />
           </TabsContent>
         </Tabs>
       </main>

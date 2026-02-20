@@ -8,22 +8,45 @@ import { Button } from "@/components/ui/button";
 import { AlbumUI } from "@/types/spotify";
 
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { redirect, useParams, useRouter } from "next/navigation";
+import { useSession } from "@/lib/auth-client";
 import { ArrowLeft, Music, Plus, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Header } from "@/components/header";
 import { useDebounce } from "use-debounce";
 import { AlbumForm } from "@/components/album-form";
 import { toast } from "sonner";
+import { useEffect } from "react";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 
 export default function Home() {
-  const session = useSession({
-    required: true,
-    onUnauthenticated() {
-      redirect("/login");
-    },
-  });
+  const params = useParams();
+  const username = params.username as string;
+  const router = useRouter();
+
+  const session = useSession();
+
+  // Type safe user check
+  const user = session.data?.user as { username?: string } | undefined;
+
+  useEffect(() => {
+    if (!session.isPending && !session.data) {
+      router.push("/login");
+    } else if (
+      !session.isPending &&
+      session.data &&
+      user?.username !== username
+    ) {
+      toast.error(
+        "Vous ne pouvez ajouter des albums qu'à votre propre collection",
+      );
+      router.push(`/${user?.username || ""}`);
+    }
+  }, [session.data, session.isPending, username, router, user?.username]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [search] = useDebounce(searchTerm, 500);
@@ -35,55 +58,52 @@ export default function Home() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "An error occurred while adding to collection",
+          : "Une erreur est survenue lors de l'ajout à la collection",
       );
     },
     onSuccess: () => {
-      toast.success("Album added to collection successfully!");
+      toast.success("Album ajouté à la collection avec succès !");
       setAlbum(undefined);
     },
   });
 
   return (
     <>
-      <Header>
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" asChild className="gap-2">
-            <Link href="/">
-              <ArrowLeft />
-            </Link>
+      <Header hideUserDropdown hideLogo>
+        <div className="flex items-center gap-4 ">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            size="icon"
+            className="shrink-0"
+          >
+            <ArrowLeft />
           </Button>
-          <div className="flex items-center gap-3">
-            <div>
-              <h1 className="text-2xl font-bold">
-                {album ? "Ajouter à ma collection" : "Rechercher un vinyle"}
-              </h1>
-            </div>
-          </div>
+          <h1 className="text-xl md:text-2xl font-bold truncate">
+            {album ? "Ajouter à ma collection" : "Rechercher un vinyle"}
+          </h1>
         </div>
       </Header>
       <main className="container mx-auto px-4 py-8">
-        {session.status === "loading" && (
-          <div className="max-w-2xl mx-auto text-center">
-            Loading or not authenticated...
-          </div>
+        {session.isPending && (
+          <div className="max-w-2xl mx-auto text-center">Chargement...</div>
         )}
-        {session.status == "authenticated" && (
+        {!session.isPending && session && user?.username === username && (
           <>
             {!album ? (
               <div className="max-w-2xl mx-auto">
-                {/* Search Bar */}
                 <div className="mb-8">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 " />
-                    <Input
+                  <InputGroup>
+                    <InputGroupAddon>
+                      <Search />
+                    </InputGroupAddon>
+                    <InputGroupInput
                       name="search"
                       placeholder="Rechercher un album ou un artiste..."
                       onChange={(e) => setSearchTerm(e.target.value)}
                       value={searchTerm}
-                      className="pl-10 bg-white/80 backdrop-blur-sm"
                     />
-                  </div>
+                  </InputGroup>
                 </div>
 
                 {searchTerm && (
@@ -214,7 +234,12 @@ export default function Home() {
                   <CardContent>
                     <AlbumForm
                       album={album}
-                      onSubmit={(payload) => addToCollection.mutate(payload)}
+                      onSubmit={(payload) =>
+                        addToCollection.mutate({
+                          ...payload,
+                          userId: session.data?.user?.id || "",
+                        })
+                      }
                       mode="create"
                       onCancel={() => setAlbum(undefined)}
                       isLoading={addToCollection.isPending}

@@ -6,8 +6,8 @@ import { Providers } from "@/app/providers";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "Mes vinyles",
-  description: "Ma collection de vinyles",
+  title: "Records",
+  description: "Collection de vinyles",
 };
 
 export default function RootLayout({
