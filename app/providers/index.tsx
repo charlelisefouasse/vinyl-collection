@@ -1,8 +1,9 @@
 "use client";
 
 import ReactQueryProvider from "@/app/providers/tanstack-query";
-import { AuthSessionProvider } from "@/app/providers/next-auth";
+
 import { ThemeProvider } from "next-themes";
+import { OnboardingGuard } from "@/components/onboarding-guard";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -12,9 +13,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      <AuthSessionProvider>
-        <ReactQueryProvider>{children}</ReactQueryProvider>
-      </AuthSessionProvider>
+      <ReactQueryProvider>
+        <OnboardingGuard>{children}</OnboardingGuard>
+      </ReactQueryProvider>
     </ThemeProvider>
   );
 }
