@@ -15,11 +15,7 @@ import {
   FieldSet,
 } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  useAddAlbum,
-  useDeleteAlbum,
-  useUpdateAlbum,
-} from "@/services/albums/service";
+import { useDeleteAlbum } from "@/services/albums/service";
 import { useRouter } from "next/navigation";
 
 import {
@@ -92,11 +88,10 @@ export function AlbumForm({
 
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
+      onSubmit={() => {
         form.handleSubmit();
       }}
+      noValidate
       className="space-y-6"
     >
       <FieldGroup>
@@ -104,7 +99,7 @@ export function AlbumForm({
           <form.Field
             name="name"
             validators={{
-              onChange: ({ value }) =>
+              onBlur: ({ value }) =>
                 !value ? "Le nom de l'album est requis" : undefined,
             }}
             children={(field) => {
@@ -135,7 +130,7 @@ export function AlbumForm({
           <form.Field
             name="artist"
             validators={{
-              onChange: ({ value }) =>
+              onBlur: ({ value }) =>
                 !value ? "Le nom de l'artiste est requis" : undefined,
             }}
             children={(field) => {
@@ -271,17 +266,30 @@ export function AlbumForm({
             </AlertDialogContent>
           </AlertDialog>
         )}
-        <Button type="submit" disabled={isSubmitting}>
-          {mode === "create" ? (
-            <>
-              <Plus />
-              Ajouter
-            </>
-          ) : (
-            "Enregistrer"
-          )}
-          {isSubmitting && <Spinner />}
-        </Button>
+        <form.Subscribe
+          selector={(state) =>
+            [state.canSubmit, state.isSubmitting, state.values] as const
+          }
+          children={([canSubmit, isSubmittingState, values]) => {
+            const hasRequired =
+              !!values.name?.trim() && !!values.artist?.trim();
+            const disabled =
+              !canSubmit || isSubmitting || isSubmittingState || !hasRequired;
+            return (
+              <Button type="submit" disabled={disabled}>
+                {mode === "create" ? (
+                  <>
+                    <Plus />
+                    Ajouter
+                  </>
+                ) : (
+                  "Enregistrer"
+                )}
+                {isSubmittingState && <Spinner />}
+              </Button>
+            );
+          }}
+        />
       </div>
     </form>
   );

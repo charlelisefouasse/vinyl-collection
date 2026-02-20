@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, authClient } from "@/lib/auth-client";
+import { useForm } from "@tanstack/react-form";
 import {
   Card,
   CardContent,
@@ -13,7 +14,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Check, X } from "lucide-react";
 import {
@@ -23,87 +23,56 @@ import {
 } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { LogoFull } from "@/components/ui/logo-full";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldSet,
+} from "@/components/ui/field";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { data: session } = useSession();
-  const [loading, setLoading] = useState(false);
-  const [checkingUsername, setCheckingUsername] = useState(false);
-  const [usernameError, setUsernameError] = useState<string | null>(null);
-  const [isUsernameFocused, setIsUsernameFocused] = useState(false);
+  const { data: session, isPending } = useSession();
 
-  // Pre-fill with name from Google if available
-  const [name, setName] = useState(session?.user?.name || "");
-  const [username, setUsername] = useState("");
+  const form = useForm({
+    defaultValues: {
+      name: "",
+      username: "",
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        const { error } = await authClient.updateUser({
+          name: value.name,
+          username: value.username.toLowerCase().trim(),
+        });
 
-  const checkUsername = async (val: string) => {
-    const cleanUsername = val.toLowerCase().trim();
-    if (!cleanUsername) {
-      setUsernameError(null);
-      return;
-    }
+        if (error) {
+          toast.error(error.message || "Erreur lors de la mise à jour");
+          return;
+        }
 
-    setCheckingUsername(true);
-    setUsernameError(null);
-
-    try {
-      const { data, error } = await authClient.isUsernameAvailable({
-        username: cleanUsername,
-      });
-
-      if (error) {
-        setUsernameError("Erreur lors de la vérification");
-      } else if (!data?.available) {
-        setUsernameError("Ce nom d'utilisateur est déjà pris");
+        toast.success("Profil configuré !");
+        router.replace("/");
+      } catch (err: any) {
+        toast.error(err.message || "Erreur inattendue");
       }
-    } catch (e) {
-      setUsernameError("Erreur lors de la vérification");
-    } finally {
-      setCheckingUsername(false);
+    },
+  });
+
+  useEffect(() => {
+    if (session?.user?.name && !form.state.values.name) {
+      form.setFieldValue("name", session.user.name);
     }
-  };
+  }, [session, form]);
 
-  const handleUsernameBlur = () => {
-    if (username) {
-      checkUsername(username);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username.trim() || !name.trim()) {
-      toast.error("Veuillez remplir tous les champs");
-      return;
-    }
-
-    if (usernameError) {
-      toast.error(usernameError);
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const { error } = await authClient.updateUser({
-        name: name,
-        username: username.toLowerCase().trim(),
-      });
-
-      if (error) {
-        toast.error(error.message || "Erreur lors de la mise à jour");
-        setLoading(false);
-        return;
-      }
-
-      toast.success("Profil configuré !");
-      window.location.href = "/";
-    } catch (err: any) {
-      toast.error(err.message || "Erreur inattendue");
-      setLoading(false);
-    }
-  };
-
-  const isSubmitDisabled = loading || checkingUsername;
+  if (isPending) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-dvh items-center justify-center p-4 flex-col gap-12">
@@ -118,74 +87,146 @@ export default function OnboardingPage() {
         <CardContent>
           <form
             id="onboarding-form"
-            onSubmit={handleSubmit}
+            onSubmit={() => {
+              form.handleSubmit();
+            }}
+            noValidate
             className="space-y-4"
           >
-            <div className="space-y-2">
-              <Label htmlFor="name">Nom</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Noah"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="username"
-                className={usernameError ? "text-destructive" : ""}
-              >
-                Nom d'utilisateur
-              </Label>
-              <InputGroup>
-                <InputGroupInput
-                  id="username"
-                  value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value);
-                    if (usernameError) setUsernameError(null);
+            <FieldGroup>
+              <FieldSet>
+                <form.Field
+                  name="name"
+                  validators={{
+                    onBlur: ({ value }) =>
+                      !value.trim() ? "Le nom est requis" : undefined,
                   }}
-                  onFocus={() => setIsUsernameFocused(true)}
-                  onBlur={() => {
-                    setIsUsernameFocused(false);
-                    handleUsernameBlur();
+                  children={(field) => {
+                    const isInvalid =
+                      field.state.meta.isTouched &&
+                      !!field.state.meta.errors.length;
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel>Nom</FieldLabel>
+                        <Input
+                          value={field.state.value}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          onBlur={field.handleBlur}
+                          placeholder="Noah"
+                          aria-invalid={isInvalid}
+                        />
+                        {isInvalid && (
+                          <FieldError
+                            errors={field.state.meta.errors.map((err) => ({
+                              message: err?.toString() || "",
+                            }))}
+                          />
+                        )}
+                      </Field>
+                    );
                   }}
-                  placeholder="noahsebastian"
-                  aria-invalid={!!usernameError}
                 />
-                <InputGroupAddon align="inline-end">
-                  {!isUsernameFocused && checkingUsername && (
-                    <Spinner className="text-muted-foreground" />
-                  )}
-                  {!isUsernameFocused &&
-                    !checkingUsername &&
-                    username &&
-                    !usernameError && (
-                      <Check className="h-4 w-4 text-green-500" />
-                    )}
-                  {!isUsernameFocused && !checkingUsername && usernameError && (
-                    <X className="h-4 w-4 text-destructive" />
-                  )}
-                </InputGroupAddon>
-              </InputGroup>
-              {usernameError && (
-                <p className="text-sm font-medium text-destructive">
-                  {usernameError}
-                </p>
-              )}
-            </div>
+
+                <form.Field
+                  name="username"
+                  validators={{
+                    onChange: ({ value }) => {
+                      if (value.length > 31)
+                        return "Trop long (max 31 caractères)";
+                      if (!/^[a-zA-Z0-9_]+$/.test(value) && value)
+                        return "Caractères invalides (lettres, chiffres, tirets du bas)";
+                      return undefined;
+                    },
+                    onChangeAsyncDebounceMs: 500,
+                    onChangeAsync: async ({ value }) => {
+                      const cleanUsername = value.toLowerCase().trim();
+                      if (!cleanUsername) return undefined;
+                      try {
+                        const { data, error } =
+                          await authClient.isUsernameAvailable({
+                            username: cleanUsername,
+                          });
+                        if (error) return "Erreur lors de la vérification";
+                        if (!data?.available)
+                          return "Ce nom d'utilisateur est déjà pris";
+                      } catch (e) {
+                        return "Erreur lors de la vérification";
+                      }
+                      return undefined;
+                    },
+                    onBlur: ({ value }) => {
+                      if (!value.trim())
+                        return "Le nom d'utilisateur est requis";
+                      if (value.length < 3)
+                        return "Top court (min 3 caractères)";
+                    },
+                  }}
+                  children={(field) => {
+                    const isInvalid = !!field.state.meta.errors.length;
+                    const isChecking = field.state.meta.isValidating;
+                    const isValidAndChecked =
+                      field.state.meta.isTouched &&
+                      !isChecking &&
+                      !field.state.meta.errors.length &&
+                      field.state.value.length >= 3;
+
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel>Nom d'utilisateur</FieldLabel>
+                        <InputGroup>
+                          <InputGroupInput
+                            value={field.state.value}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            onBlur={field.handleBlur}
+                            placeholder="noahsebastian"
+                            aria-invalid={isInvalid}
+                          />
+                          <InputGroupAddon align="inline-end">
+                            {isChecking && (
+                              <Spinner className="text-muted-foreground" />
+                            )}
+                            {isValidAndChecked && (
+                              <Check className="text-green-500" />
+                            )}
+                            {isInvalid && <X className="text-destructive" />}
+                          </InputGroupAddon>
+                        </InputGroup>
+                        {isInvalid && (
+                          <FieldError
+                            errors={field.state.meta.errors.map((err) => ({
+                              message: err?.toString() || "",
+                            }))}
+                          />
+                        )}
+                      </Field>
+                    );
+                  }}
+                />
+              </FieldSet>
+            </FieldGroup>
           </form>
         </CardContent>
         <CardFooter>
-          <Button
-            form="onboarding-form"
-            type="submit"
-            className="w-full"
-            disabled={isSubmitDisabled}
-          >
-            Continuer
-            {loading && <Spinner />}
-          </Button>
+          <form.Subscribe
+            selector={(state) =>
+              [state.canSubmit, state.isSubmitting, state.values] as const
+            }
+            children={([canSubmit, isSubmitting, values]) => {
+              const hasRequired =
+                !!values.name?.trim() && !!values.username?.trim();
+              return (
+                <Button
+                  form="onboarding-form"
+                  type="submit"
+                  className="w-full"
+                  disabled={!canSubmit || isSubmitting || !hasRequired}
+                >
+                  Continuer
+                  {isSubmitting && <Spinner />}
+                </Button>
+              );
+            }}
+          />
         </CardFooter>
       </Card>
     </div>

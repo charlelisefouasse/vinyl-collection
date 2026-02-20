@@ -4,7 +4,6 @@ import { useState } from "react";
 import { signIn, signUp, authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -23,97 +22,71 @@ import {
 } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { LogoFull } from "@/components/ui/logo-full";
+import { useForm } from "@tanstack/react-form";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldSet,
+} from "@/components/ui/field";
 
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [checkingUsername, setCheckingUsername] = useState(false);
-  const [usernameError, setUsernameError] = useState<string | null>(null);
-  const [isUsernameFocused, setIsUsernameFocused] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
 
-  const handleSignIn = async () => {
-    setLoading(true);
-    await signIn.email({
-      email,
-      password,
-      callbackURL: "/",
-      fetchOptions: {
-        onError: (ctx) => {
-          toast.error(ctx.error.message);
-          setLoading(false);
+  const signInForm = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    onSubmit: async ({ value }) => {
+      setLoading(true);
+      await signIn.email({
+        email: value.email,
+        password: value.password,
+        callbackURL: "/",
+        fetchOptions: {
+          onError: (ctx) => {
+            toast.error(ctx.error.message);
+            setLoading(false);
+          },
+          onSuccess: () => {
+            router.push("/");
+          },
         },
-        onSuccess: () => {
-          router.push("/");
-        },
-      },
-    });
-  };
-
-  const checkUsername = async (val: string) => {
-    const cleanUsername = val.toLowerCase().trim();
-    if (!cleanUsername) {
-      setUsernameError(null);
-      return;
-    }
-
-    setCheckingUsername(true);
-    setUsernameError(null);
-
-    try {
-      const { data, error } = await authClient.isUsernameAvailable({
-        username: cleanUsername,
       });
+    },
+  });
 
-      if (error) {
-        setUsernameError("Erreur lors de la vérification");
-      } else if (!data?.available) {
-        setUsernameError("Ce nom d'utilisateur est déjà pris");
-      }
-    } catch (e) {
-      setUsernameError("Erreur lors de la vérification");
-    } finally {
-      setCheckingUsername(false);
-    }
-  };
-
-  const handleUsernameBlur = () => {
-    if (username) {
-      checkUsername(username);
-    }
-  };
-
-  const handleSignUp = async () => {
-    if (!name || !username || !email || !password) {
-      toast.error("Veuillez remplir tous les champs");
-      return;
-    }
-    if (usernameError) {
-      toast.error(usernameError);
-      return;
-    }
-    setLoading(true);
-    await signUp.email({
-      email,
-      password,
-      name,
-      // @ts-ignore
-      username, // Ensure username is passed if schema requires it and you added it to better-auth config
-      callbackURL: "/", // Maybe redirect to login or home
-      fetchOptions: {
-        onError: (ctx) => {
-          toast.error(ctx.error.message);
-          setLoading(false);
+  const signUpForm = useForm({
+    defaultValues: {
+      name: "",
+      username: "",
+      email: "",
+      password: "",
+    },
+    onSubmit: async ({ value }) => {
+      setLoading(true);
+      await signUp.email({
+        email: value.email,
+        password: value.password,
+        name: value.name,
+        // @ts-ignore
+        username: value.username.toLowerCase().trim(),
+        callbackURL: "/",
+        fetchOptions: {
+          onError: (ctx) => {
+            toast.error(ctx.error.message);
+            setLoading(false);
+          },
+          onSuccess: () => {
+            setLoading(false);
+          },
         },
-        onSuccess: () => {
-          setLoading(false);
-        },
-      },
-    });
-  };
+      });
+    },
+  });
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -143,36 +116,113 @@ export default function LoginPage() {
             <CardHeader hidden>
               <CardTitle>Se connecter</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="noah@badomens.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
+            <CardContent>
+              <form
+                id="signin-form"
+                onSubmit={() => {
+                  signInForm.handleSubmit();
+                }}
+                noValidate
+                className="space-y-4"
+              >
+                <FieldGroup>
+                  <FieldSet>
+                    <signInForm.Field
+                      name="email"
+                      validators={{
+                        onBlur: ({ value }) =>
+                          !value ? "L'email est requis" : undefined,
+                      }}
+                      children={(field) => {
+                        const isInvalid =
+                          field.state.meta.isTouched &&
+                          !!field.state.meta.errors.length;
+                        return (
+                          <Field data-invalid={isInvalid}>
+                            <FieldLabel>Email</FieldLabel>
+                            <Input
+                              type="email"
+                              value={field.state.value}
+                              onChange={(e) =>
+                                field.handleChange(e.target.value)
+                              }
+                              onBlur={field.handleBlur}
+                              placeholder="noah@badomens.com"
+                              aria-invalid={isInvalid}
+                            />
+                            {isInvalid && (
+                              <FieldError
+                                errors={field.state.meta.errors.map((err) => ({
+                                  message: err?.toString() || "",
+                                }))}
+                              />
+                            )}
+                          </Field>
+                        );
+                      }}
+                    />
+                    <signInForm.Field
+                      name="password"
+                      validators={{
+                        onBlur: ({ value }) =>
+                          !value ? "Le mot de passe est requis" : undefined,
+                      }}
+                      children={(field) => {
+                        const isInvalid =
+                          field.state.meta.isTouched &&
+                          !!field.state.meta.errors.length;
+                        return (
+                          <Field data-invalid={isInvalid}>
+                            <FieldLabel>Mot de passe</FieldLabel>
+                            <Input
+                              type="password"
+                              value={field.state.value}
+                              onChange={(e) =>
+                                field.handleChange(e.target.value)
+                              }
+                              onBlur={field.handleBlur}
+                              aria-invalid={isInvalid}
+                            />
+                            {isInvalid && (
+                              <FieldError
+                                errors={field.state.meta.errors.map((err) => ({
+                                  message: err?.toString() || "",
+                                }))}
+                              />
+                            )}
+                          </Field>
+                        );
+                      }}
+                    />
+                  </FieldSet>
+                </FieldGroup>
+              </form>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <Button
-                className="w-full"
-                onClick={handleSignIn}
-                disabled={loading}
-              >
-                Se connecter
-                {loading && <Spinner className="mr-2 h-4 w-4 animate-spin" />}
-              </Button>
+              <signInForm.Subscribe
+                selector={(state) =>
+                  [state.canSubmit, state.isSubmitting, state.values] as const
+                }
+                children={([canSubmit, isSubmitting, values]) => {
+                  const hasRequired =
+                    !!values.email?.trim() && !!values.password?.trim();
+                  return (
+                    <Button
+                      form="signin-form"
+                      type="submit"
+                      className="w-full"
+                      disabled={
+                        !canSubmit || isSubmitting || loading || !hasRequired
+                      }
+                    >
+                      Se connecter
+                      {isSubmitting && (
+                        <Spinner className="ml-2 h-4 w-4 animate-spin" />
+                      )}
+                    </Button>
+                  );
+                }}
+              />
               <div className="flex justify-center">
                 <span className="px-2 text-muted-foreground text-xs">OU</span>
               </div>
@@ -200,85 +250,237 @@ export default function LoginPage() {
             <CardHeader hidden>
               <CardTitle>S'inscrire</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-name">Nom</Label>
-                <Input
-                  id="signup-name"
-                  placeholder="Noah"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label
-                  htmlFor="signup-username"
-                  className={usernameError ? "text-destructive" : ""}
-                >
-                  Nom d'utilisateur
-                </Label>
-                <InputGroup>
-                  <InputGroupInput
-                    id="signup-username"
-                    placeholder="noahsebastian"
-                    value={username}
-                    onChange={(e) => {
-                      setUsername(e.target.value);
-                      if (usernameError) setUsernameError(null);
-                    }}
-                    onFocus={() => setIsUsernameFocused(true)}
-                    onBlur={() => {
-                      setIsUsernameFocused(false);
-                      handleUsernameBlur();
-                    }}
-                    aria-invalid={!!usernameError}
-                  />
-                  <InputGroupAddon align="inline-end">
-                    {!isUsernameFocused && checkingUsername && <Spinner />}
-                    {!isUsernameFocused &&
-                      !checkingUsername &&
-                      username &&
-                      !usernameError && <Check className="text-green-500" />}
-                    {!isUsernameFocused &&
-                      !checkingUsername &&
-                      usernameError && <X className="text-destructive" />}
-                  </InputGroupAddon>
-                </InputGroup>
-                {usernameError && (
-                  <p className="text-sm font-medium text-destructive">
-                    {usernameError}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
-                <Input
-                  id="signup-email"
-                  type="email"
-                  placeholder="noah@badomens.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-password">Mot de passe</Label>
-                <Input
-                  id="signup-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
+            <CardContent>
+              <form
+                id="signup-form"
+                onSubmit={(e) => {
+                  signUpForm.handleSubmit();
+                }}
+                noValidate
+                className="space-y-4"
+              >
+                <FieldGroup>
+                  <FieldSet>
+                    <signUpForm.Field
+                      name="name"
+                      validators={{
+                        onBlur: ({ value }) =>
+                          !value.trim() ? "Le nom est requis" : undefined,
+                      }}
+                      children={(field) => {
+                        const isInvalid =
+                          field.state.meta.isTouched &&
+                          !!field.state.meta.errors.length;
+                        return (
+                          <Field data-invalid={isInvalid}>
+                            <FieldLabel>Nom</FieldLabel>
+                            <Input
+                              value={field.state.value}
+                              onChange={(e) =>
+                                field.handleChange(e.target.value)
+                              }
+                              onBlur={field.handleBlur}
+                              placeholder="Noah"
+                              aria-invalid={isInvalid}
+                            />
+                            {isInvalid && (
+                              <FieldError
+                                errors={field.state.meta.errors.map((err) => ({
+                                  message: err?.toString() || "",
+                                }))}
+                              />
+                            )}
+                          </Field>
+                        );
+                      }}
+                    />
+
+                    <signUpForm.Field
+                      name="username"
+                      validators={{
+                        onChange: ({ value }) => {
+                          if (value.length > 31)
+                            return "Trop long (max 31 caractères)";
+                          if (!/^[a-zA-Z0-9_]+$/.test(value) && value)
+                            return "Caractères invalides (lettres, chiffres, tirets du bas)";
+                          return undefined;
+                        },
+                        onChangeAsyncDebounceMs: 500,
+                        onChangeAsync: async ({ value }) => {
+                          const cleanUsername = value.toLowerCase().trim();
+                          if (!cleanUsername) return undefined;
+                          try {
+                            const { data, error } =
+                              await authClient.isUsernameAvailable({
+                                username: cleanUsername,
+                              });
+                            if (error) return "Erreur lors de la vérification";
+                            if (!data?.available)
+                              return "Ce nom d'utilisateur est déjà pris";
+                          } catch (e) {
+                            return "Erreur lors de la vérification";
+                          }
+                          return undefined;
+                        },
+                        onBlur: ({ value }) => {
+                          if (!value.trim())
+                            return "Le nom d'utilisateur est requis";
+                          if (value.length < 3)
+                            return "Top court (min 3 caractères)";
+                        },
+                      }}
+                      children={(field) => {
+                        const isInvalid = !!field.state.meta.errors.length;
+                        const isChecking = field.state.meta.isValidating;
+                        const isValidAndChecked =
+                          field.state.meta.isTouched &&
+                          !isChecking &&
+                          !field.state.meta.errors.length &&
+                          field.state.value.length >= 3;
+
+                        return (
+                          <Field data-invalid={isInvalid}>
+                            <FieldLabel>Nom d'utilisateur</FieldLabel>
+                            <InputGroup>
+                              <InputGroupInput
+                                value={field.state.value}
+                                onChange={(e) =>
+                                  field.handleChange(e.target.value)
+                                }
+                                onBlur={field.handleBlur}
+                                placeholder="noahsebastian"
+                                aria-invalid={isInvalid}
+                              />
+                              <InputGroupAddon align="inline-end">
+                                {isChecking && (
+                                  <Spinner className="text-muted-foreground animate-spin" />
+                                )}
+                                {isValidAndChecked && (
+                                  <Check className="text-green-500" />
+                                )}
+                                {isInvalid && (
+                                  <X className="text-destructive" />
+                                )}
+                              </InputGroupAddon>
+                            </InputGroup>
+                            {isInvalid && (
+                              <FieldError
+                                errors={field.state.meta.errors.map((err) => ({
+                                  message: err?.toString() || "",
+                                }))}
+                              />
+                            )}
+                          </Field>
+                        );
+                      }}
+                    />
+
+                    <signUpForm.Field
+                      name="email"
+                      validators={{
+                        onBlur: ({ value }) => {
+                          if (!value) return "L'email est requis";
+                          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+                            return "Adresse email invalide";
+                          return undefined;
+                        },
+                      }}
+                      children={(field) => {
+                        const isInvalid =
+                          field.state.meta.isTouched &&
+                          !!field.state.meta.errors.length;
+                        return (
+                          <Field data-invalid={isInvalid}>
+                            <FieldLabel>Email</FieldLabel>
+                            <Input
+                              type="email"
+                              value={field.state.value}
+                              onChange={(e) =>
+                                field.handleChange(e.target.value)
+                              }
+                              onBlur={field.handleBlur}
+                              placeholder="noah@badomens.com"
+                              aria-invalid={isInvalid}
+                            />
+                            {isInvalid && (
+                              <FieldError
+                                errors={field.state.meta.errors.map((err) => ({
+                                  message: err?.toString() || "",
+                                }))}
+                              />
+                            )}
+                          </Field>
+                        );
+                      }}
+                    />
+
+                    <signUpForm.Field
+                      name="password"
+                      validators={{
+                        onBlur: ({ value }) => {
+                          if (!value) return "Le mot de passe est requis";
+                          if (value.length < 8)
+                            return "8 caractères minimum requis";
+                          return undefined;
+                        },
+                      }}
+                      children={(field) => {
+                        const isInvalid =
+                          field.state.meta.isTouched &&
+                          !!field.state.meta.errors.length;
+                        return (
+                          <Field data-invalid={isInvalid}>
+                            <FieldLabel>Mot de passe</FieldLabel>
+                            <Input
+                              type="password"
+                              value={field.state.value}
+                              onChange={(e) =>
+                                field.handleChange(e.target.value)
+                              }
+                              onBlur={field.handleBlur}
+                              aria-invalid={isInvalid}
+                            />
+                            {isInvalid && (
+                              <FieldError
+                                errors={field.state.meta.errors.map((err) => ({
+                                  message: err?.toString() || "",
+                                }))}
+                              />
+                            )}
+                          </Field>
+                        );
+                      }}
+                    />
+                  </FieldSet>
+                </FieldGroup>
+              </form>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <Button
-                className="w-full"
-                onClick={handleSignUp}
-                disabled={loading || checkingUsername}
-              >
-                S'inscrire
-                {loading && <Spinner />}
-              </Button>
+              <signUpForm.Subscribe
+                selector={(state) =>
+                  [state.canSubmit, state.isSubmitting, state.values] as const
+                }
+                children={([canSubmit, isSubmitting, values]) => {
+                  const hasRequired =
+                    !!values.name?.trim() &&
+                    !!values.username?.trim() &&
+                    !!values.email?.trim() &&
+                    !!values.password?.trim();
+                  return (
+                    <Button
+                      form="signup-form"
+                      type="submit"
+                      className="w-full"
+                      disabled={
+                        !canSubmit || isSubmitting || loading || !hasRequired
+                      }
+                    >
+                      S'inscrire
+                      {isSubmitting && <Spinner />}
+                    </Button>
+                  );
+                }}
+              />
 
               <div className="flex justify-center">
                 <span className="px-2 text-muted-foreground text-xs">OU</span>
