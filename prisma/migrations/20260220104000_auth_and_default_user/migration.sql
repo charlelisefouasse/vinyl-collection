@@ -28,6 +28,7 @@ UPDATE "Album" SET "userId" = 'cmluoz9hi0000zieb2v6l4kj7' WHERE "userId" IS NULL
 ALTER TABLE "Album" ALTER COLUMN "userId" SET NOT NULL;
 
 -- CreateTable session
+CREATE TABLE "session" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "token" TEXT NOT NULL,
