@@ -31,12 +31,12 @@ import { Header } from "@/components/header";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 
-interface ProfileFormValues {
+interface AccountFormValues {
   name: string;
   theme: string;
 }
 
-export default function ProfilePage() {
+export default function AccountPage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const { mutate: updateUser, isPending: isUpdating } = useUpdateUser();
@@ -47,7 +47,7 @@ export default function ProfilePage() {
     handleSubmit,
     reset,
     formState: { isValid, isSubmitting, isDirty },
-  } = useForm<ProfileFormValues>({
+  } = useForm<AccountFormValues>({
     defaultValues: {
       name: "",
       theme: "system",
@@ -63,7 +63,7 @@ export default function ProfilePage() {
     }
   }, [session, reset]);
 
-  const onSubmit = (value: ProfileFormValues) => {
+  const onSubmit = (value: AccountFormValues) => {
     updateUser(
       {
         name: value.name,
@@ -71,7 +71,7 @@ export default function ProfilePage() {
       },
       {
         onSuccess: () => {
-          toast.success("Profil mis à jour !");
+          toast.success("Compte mis à jour !");
         },
         onError: (err: any) => {
           toast.error(err.message || "Erreur lors de la mise à jour");
@@ -106,21 +106,21 @@ export default function ProfilePage() {
           >
             <ArrowLeft />
           </Button>
-          <h1 className="text-xl md:text-2xl font-bold truncate">Profil</h1>
+          <h1 className="text-xl md:text-2xl font-bold">Compte</h1>
         </div>
       </Header>
       <main className="container mx-auto px-4 py-8">
         <div className="container max-w-2xl mx-auto py-12 px-4">
           <Card>
             <CardHeader>
-              <CardTitle>Mon Profil</CardTitle>
+              <CardTitle>Mon compte</CardTitle>
               <CardDescription>
                 Gérez vos informations personnelles et vos préférences.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form
-                id="profile-form"
+                id="account-form"
                 onSubmit={handleSubmit(onSubmit)}
                 className="space-y-6"
               >
@@ -211,7 +211,7 @@ export default function ProfilePage() {
             <CardFooter className="flex justify-end">
               <Button
                 type="submit"
-                form="profile-form"
+                form="account-form"
                 disabled={!isDirty || !isValid || isSubmitting || isUpdating}
               >
                 Sauvegarder

@@ -64,7 +64,7 @@ export default function OnboardingPage() {
       },
       {
         onSuccess: () => {
-          toast.success("Profil configuré !");
+          toast.success("Compte configuré !");
           router.replace("/");
         },
         onError: (err: any) => {
@@ -101,7 +101,7 @@ export default function OnboardingPage() {
         <CardHeader>
           <CardTitle>Dernière étape ! 🚀</CardTitle>
           <CardDescription>
-            Choisissez un nom d'utilisateur pour votre profil public.
+            Choisissez un nom et un nom d'utilisateur pour votre profil public.
           </CardDescription>
         </CardHeader>
         <CardContent>

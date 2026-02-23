@@ -15,19 +15,18 @@ export default async function UserProfilePage({ params }: PageProps) {
   const { username } = await params;
   const queryClient = new QueryClient();
 
-  // Verify user exists (this fetches the profile owner from the Database)
-  const profileUser = await prisma.user.findUnique({
+  const accountUser = await prisma.user.findUnique({
     where: { username },
   });
 
-  if (!profileUser) {
+  if (!accountUser) {
     notFound();
   }
 
   // Fetch albums for this user
   const vinyls = await prisma.album.findMany({
     where: {
-      userId: profileUser.id,
+      userId: accountUser.id,
       type: "collection",
     },
     orderBy: [{ artist: "asc" }, { release_date: "asc" }],
@@ -39,7 +38,7 @@ export default async function UserProfilePage({ params }: PageProps) {
 
   return (
     <HydrationBoundary state={dehydratedState}>
-      <VinylsPage username={username} name={profileUser.name} />
+      <VinylsPage username={username} name={accountUser.name} />
     </HydrationBoundary>
   );
 }

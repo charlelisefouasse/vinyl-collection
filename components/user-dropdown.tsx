@@ -40,15 +40,15 @@ export function UserDropdown() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild>
-          <Link href="/profile">
-            <User />
-            Mon profil
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
           <Link href={`/${user.username}`}>
             <Music />
             Ma collection
+          </Link>
+        </DropdownMenuItem>{" "}
+        <DropdownMenuItem asChild>
+          <Link href="/account">
+            <User />
+            Mon compte
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => signOut()} variant="destructive">
