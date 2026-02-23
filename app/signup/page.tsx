@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { signUp, signIn } from "@/lib/auth-client";
+import { useSignUpEmail, useSignInSocial } from "@/services/auth/service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,8 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+
 import { Check, X } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import {
@@ -33,9 +31,6 @@ import {
 } from "@/components/ui/field";
 
 export default function SignUpPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-
   const {
     control: controlSignUp,
     handleSubmit: handleSubmitSignUp,
@@ -49,38 +44,24 @@ export default function SignUpPage() {
     },
   });
 
-  const onSignUpSubmit = async (value: any) => {
-    setLoading(true);
-    await signUp.email({
+  const { mutate: signUpEmail, isPending: isEmailPending } = useSignUpEmail();
+  const { mutate: signInSocial, isPending: isSocialPending } =
+    useSignInSocial();
+
+  const loading = isEmailPending || isSocialPending;
+
+  const onSignUpSubmit = (value: any) => {
+    signUpEmail({
       email: value.email,
       password: value.password,
       name: value.name,
       username: value.username.toLowerCase().trim(),
-      callbackURL: "/",
-      fetchOptions: {
-        onError: (ctx) => {
-          toast.error(ctx.error.message);
-          setLoading(false);
-        },
-        onSuccess: () => {
-          setLoading(false);
-          router.push("/");
-        },
-      },
     });
   };
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    await signIn.social({
+  const handleGoogleSignIn = () => {
+    signInSocial({
       provider: "google",
-      callbackURL: "/",
-      fetchOptions: {
-        onError: (ctx) => {
-          toast.error(ctx.error.message);
-          setLoading(false);
-        },
-      },
     });
   };
 
@@ -261,7 +242,7 @@ export default function SignUpPage() {
               disabled={signUpDisabled}
             >
               S'inscrire
-              {isSubmitting && <Spinner />}
+              {(isSubmitting || isEmailPending) && <Spinner />}
             </Button>
 
             <div className="flex justify-center">
@@ -281,7 +262,7 @@ export default function SignUpPage() {
                 />
               </svg>
               S'inscrire avec Google
-              {loading && <Spinner />}
+              {isSocialPending && <Spinner />}
             </Button>
           </CardFooter>
         </Card>

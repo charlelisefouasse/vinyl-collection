@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "@/lib/auth-client";
+import { useSignInEmail, useSignInSocial } from "@/services/auth/service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,8 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+
 import { Spinner } from "@/components/ui/spinner";
 import { LogoFull } from "@/components/ui/logo-full";
 import { useForm, Controller } from "react-hook-form";
@@ -26,9 +24,6 @@ import {
 } from "@/components/ui/field";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-
   const {
     control: controlSignIn,
     handleSubmit: handleSubmitSignIn,
@@ -40,35 +35,22 @@ export default function LoginPage() {
     },
   });
 
-  const onSignInSubmit = async (value: any) => {
-    setLoading(true);
-    await signIn.email({
+  const { mutate: signInEmail, isPending: isEmailPending } = useSignInEmail();
+  const { mutate: signInSocial, isPending: isSocialPending } =
+    useSignInSocial();
+
+  const loading = isEmailPending || isSocialPending;
+
+  const onSignInSubmit = (value: any) => {
+    signInEmail({
       email: value.email,
       password: value.password,
-      callbackURL: "/",
-      fetchOptions: {
-        onError: (ctx) => {
-          toast.error(ctx.error.message);
-          setLoading(false);
-        },
-        onSuccess: () => {
-          router.push("/");
-        },
-      },
     });
   };
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    await signIn.social({
+  const handleGoogleSignIn = () => {
+    signInSocial({
       provider: "google",
-      callbackURL: "/",
-      fetchOptions: {
-        onError: (ctx) => {
-          toast.error(ctx.error.message);
-          setLoading(false);
-        },
-      },
     });
   };
 
@@ -147,7 +129,7 @@ export default function LoginPage() {
               disabled={signInDisabled}
             >
               Se connecter
-              {isSubmitting && <Spinner />}
+              {(isSubmitting || isEmailPending) && <Spinner />}
             </Button>
             <div className="flex justify-center">
               <span className="px-2 text-muted-foreground text-xs">OU</span>
@@ -165,7 +147,7 @@ export default function LoginPage() {
                 />
               </svg>
               Se connecter avec Google
-              {loading && <Spinner />}
+              {isSocialPending && <Spinner />}
             </Button>
           </CardFooter>
         </Card>
