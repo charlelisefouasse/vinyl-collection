@@ -29,7 +29,14 @@ function WishlistTab({
 }) {
   const wishlist = useGetWishlist(username, searchTerm);
 
-  return <VinylList query={wishlist} isOwner={isOwner} />;
+  return (
+    <VinylList
+      query={wishlist}
+      username={username}
+      isOwner={isOwner}
+      contentWording="wishlist"
+    />
+  );
 }
 function CollectionTab({
   searchTerm,
@@ -42,7 +49,7 @@ function CollectionTab({
 }) {
   const collection = useGetCollection(username, searchTerm);
 
-  return <VinylList query={collection} isOwner={isOwner} />;
+  return <VinylList query={collection} username={username} isOwner={isOwner} />;
 }
 
 interface VinylsPageProps {
@@ -116,7 +123,7 @@ export default function VinylsPage({ username, name }: VinylsPageProps) {
             <div className="flex-1" />
           </div>
 
-          <TabsContent value="collection" className="mt-0">
+          <TabsContent value="collection">
             <CollectionTab
               searchTerm={search}
               username={username}
@@ -124,7 +131,7 @@ export default function VinylsPage({ username, name }: VinylsPageProps) {
             />
           </TabsContent>
 
-          <TabsContent value="wishlist" className="mt-0">
+          <TabsContent value="wishlist">
             <WishlistTab
               searchTerm={search}
               username={username}
