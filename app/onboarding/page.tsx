@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, authClient } from "@/lib/auth-client";
 import { useForm, Controller } from "react-hook-form";
+import { useUpdateUser } from "@/services/users/service";
 import {
   Card,
   CardContent,
@@ -53,23 +54,24 @@ export default function OnboardingPage() {
     },
   });
 
-  const onSubmit = async (value: FormValues) => {
-    try {
-      const { error } = await authClient.updateUser({
+  const { mutate: updateUserMutation, isPending: isUpdating } = useUpdateUser();
+
+  const onSubmit = (value: FormValues) => {
+    updateUserMutation(
+      {
         name: value.name,
         username: value.username.toLowerCase().trim(),
-      });
-
-      if (error) {
-        toast.error(error.message || "Erreur lors de la mise à jour");
-        return;
-      }
-
-      toast.success("Profil configuré !");
-      router.replace("/");
-    } catch (err: any) {
-      toast.error(err.message || "Erreur inattendue");
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success("Profil configuré !");
+          router.replace("/");
+        },
+        onError: (err: any) => {
+          toast.error(err.message || "Erreur inattendue");
+        },
+      },
+    );
   };
 
   const nameValue = watch("name");
@@ -90,7 +92,7 @@ export default function OnboardingPage() {
     );
   }
 
-  const disabled = !isValid || isSubmitting || isValidating;
+  const disabled = !isValid || isSubmitting || isValidating || isUpdating;
 
   return (
     <div className="flex min-h-dvh items-center justify-center p-4 flex-col gap-12">
@@ -211,7 +213,9 @@ export default function OnboardingPage() {
             disabled={disabled}
           >
             Continuer
-            {isSubmitting && <Spinner className="ml-2  animate-spin" />}
+            {(isSubmitting || isUpdating) && (
+              <Spinner className="ml-2  animate-spin" />
+            )}
           </Button>
         </CardFooter>
       </Card>

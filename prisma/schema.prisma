@@ -29,6 +29,7 @@ model User {
 
   image           String?
   displayUsername String?
+  theme           String   @default("system")
 
   @@map("user")
 }

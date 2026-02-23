@@ -18,7 +18,8 @@ CREATE TABLE "user" (
 
 -- Data Migration: Insert default user
 INSERT INTO "user" ("id", "name", "email", "updatedAt", "username", "createdAt")
-VALUES ('cmluoz9hi0000zieb2v6l4kj7', 'Default Collector', 'default@vinyls.local', CURRENT_TIMESTAMP, 'default', CURRENT_TIMESTAMP)
+VALUES ('cmluoz9hi0000zieb2v6l4kj7', 'Default Collector', 'default@vinyls.local', CURRENT_TIMESTAMP, 'default', CURRENT_TIMESTAMP);
+
 -- Data Migration: Bind orphaned albums
 UPDATE "Album" SET "userId" = 'cmluoz9hi0000zieb2v6l4kj7' WHERE "userId" IS NULL;
 
