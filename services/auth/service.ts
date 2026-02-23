@@ -34,6 +34,7 @@ export const useSignInSocial = () => {
     mutationFn: async (data: Parameters<typeof signIn.social>[0]) => {
       const { data: result, error } = await signIn.social({
         ...data,
+        newUserCallbackURL: "/onboarding",
         fetchOptions: {
           onError: (ctx) => {
             toast.error(ctx.error.message);

@@ -45,7 +45,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <UserThemeProvider>
       <ReactQueryProvider>
-        <OnboardingGuard>{children}</OnboardingGuard>
+        <OnboardingGuard />
+        {children}
       </ReactQueryProvider>
     </UserThemeProvider>
   );
