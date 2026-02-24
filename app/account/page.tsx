@@ -21,15 +21,21 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
-  FieldLegend,
   FieldSet,
 } from "@/components/ui/field";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+
 import { ArrowLeft, MonitorSmartphone, Moon, Sun } from "lucide-react";
 import { Header } from "@/components/header";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AccountFormValues {
   name: string;
@@ -160,48 +166,36 @@ export default function AccountPage() {
                       name="theme"
                       control={control}
                       render={({ field }) => (
-                        <FieldSet>
-                          <FieldLegend>Thème</FieldLegend>
-                          <RadioGroup
+                        <Field>
+                          <FieldLabel>Thème</FieldLabel>
+                          <Select
                             onValueChange={(value) => {
                               field.onChange(value);
                               setTheme(value);
                             }}
                             value={field.value}
-                            className="flex gap-4"
                           >
-                            <Field orientation="horizontal" className="w-fit">
-                              <RadioGroupItem value="light" id="r-light" />
-                              <Label
-                                htmlFor="r-light"
-                                className="text-sm font-medium leading-none cursor-pointer"
-                              >
-                                <Sun size={16} />
-                                Clair
-                              </Label>
-                            </Field>
-                            <Field orientation="horizontal" className="w-fit">
-                              <RadioGroupItem value="dark" id="r-dark" />
-                              <Label
-                                htmlFor="r-dark"
-                                className="text-sm font-medium leading-none cursor-pointer"
-                              >
-                                <Moon size={16} />
-                                Sombre
-                              </Label>
-                            </Field>
-                            <Field orientation="horizontal" className="w-fit">
-                              <RadioGroupItem value="system" id="r-system" />
-                              <Label
-                                htmlFor="r-system"
-                                className="text-sm font-medium leading-none cursor-pointer"
-                              >
-                                <MonitorSmartphone size={16} />
-                                Système
-                              </Label>
-                            </Field>
-                          </RadioGroup>
-                        </FieldSet>
+                            <SelectTrigger className="max-w-40">
+                              <SelectValue placeholder="Thème" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                <SelectItem value="light">
+                                  <Sun />
+                                  Light
+                                </SelectItem>
+                                <SelectItem value="dark">
+                                  <Moon />
+                                  Dark
+                                </SelectItem>
+                                <SelectItem value="system">
+                                  <MonitorSmartphone />
+                                  Appareil
+                                </SelectItem>
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        </Field>
                       )}
                     />
                   </FieldSet>
