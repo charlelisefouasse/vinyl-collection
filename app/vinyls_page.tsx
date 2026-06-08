@@ -17,6 +17,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import { RandomAlbumDialog } from "@/components/random-album-dialog";
 
 function WishlistTab({
   searchTerm,
@@ -107,20 +108,22 @@ export default function VinylsPage({ username, name }: VinylsPageProps) {
               </TabsList>
             </div>
 
-            <InputGroup className="max-w-2xl">
-              <InputGroupAddon>
-                <Search />
-              </InputGroupAddon>
-              <InputGroupInput
-                type="text"
-                name="search"
-                placeholder="Rechercher un album ou un artiste..."
-                defaultValue={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </InputGroup>
+            <div className="flex items-center gap-2 w-full">
+              <InputGroup className="max-w-2xl">
+                <InputGroupAddon>
+                  <Search />
+                </InputGroupAddon>
+                <InputGroupInput
+                  type="text"
+                  name="search"
+                  placeholder="Rechercher un album ou un artiste..."
+                  defaultValue={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </InputGroup>
 
-            <div className="flex-1" />
+              <RandomAlbumDialog albums={vinyls.data} />
+            </div>
           </div>
 
           <TabsContent value="collection">

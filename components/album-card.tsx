@@ -66,8 +66,8 @@ export const AlbumCard = ({
           )}
         </div>
 
-        <div className="space-y-1">
-          <div className="flex justify-between">
+        <div className="flex justify-between gap-2">
+          <div className="space-y-1">
             <h2
               className={cn(
                 "font-semibold text-base md:text-lg leading-tight line-clamp-2",
@@ -78,49 +78,41 @@ export const AlbumCard = ({
             >
               {album.name}
             </h2>
-            {isOwner && showAdminControls && (
-              <div
-                className="flex gap-2 mt-2"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Button
-                  size="icon"
-                  variant="outline"
-                  asChild
-                  className="h-8 w-8"
-                >
-                  <Link href={`${username}/${album.id}/edit`}>
-                    <Edit className="h-4 w-4" />
-                  </Link>
-                </Button>
+
+            <p
+              className={cn(
+                "text-sm md:text-base text-muted-foreground line-clamp-1",
+                {
+                  "text-base line-clamp-none": isInModal,
+                },
+              )}
+            >
+              {album.artist}
+            </p>
+
+            {album.genres && (
+              <div className="flex flex-wrap gap-1">
+                {album.genres.map((genre, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="text-xs bg-muted/50"
+                  >
+                    {genre}
+                  </Badge>
+                ))}
               </div>
             )}
           </div>
-
-          <p
-            className={cn(
-              "text-sm md:text-base text-muted-foreground line-clamp-1",
-              {
-                "text-base line-clamp-none": isInModal,
-              },
-            )}
-          >
-            {album.artist}
-          </p>
-
-          {album.genres && (
-            <div className="flex flex-wrap gap-1">
-              {album.genres.map((genre, index) => (
-                <Badge
-                  key={index}
-                  variant="secondary"
-                  className="text-xs bg-muted/50"
-                >
-                  {genre}
-                </Badge>
-              ))}
+          {isOwner && showAdminControls && (
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+              <Button size="icon" variant="outline" asChild className="h-8 w-8">
+                <Link href={`${username}/${album.id}/edit`}>
+                  <Edit className="h-4 w-4" />
+                </Link>
+              </Button>
             </div>
-          )}
+          )}{" "}
         </div>
       </CardContent>
     </Card>
