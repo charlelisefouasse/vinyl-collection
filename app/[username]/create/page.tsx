@@ -130,9 +130,13 @@ export default function Home() {
                       !searchAlbums.isError && (
                         <div className="text-center py-8">
                           <Music className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                          <p className="text-muted-foreground">
+                          <p className="text-muted-foreground mb-4">
                             Aucun résultat trouvé pour &quot;{searchTerm}&quot;
                           </p>
+                          <Button onClick={() => setAlbum({} as AlbumUI)} variant="outline" className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Ajouter manuellement
+                          </Button>
                         </div>
                       )}
 
@@ -194,10 +198,24 @@ export default function Home() {
                     <h2 className="text-xl font-semibold mb-2">
                       Recherchez votre vinyle
                     </h2>
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground mb-6">
                       Tapez le nom d&apos;un album ou d&apos;un artiste pour
                       commencer
                     </p>
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">
+                          Ou
+                        </span>
+                      </div>
+                    </div>
+                    <Button onClick={() => setAlbum({} as AlbumUI)} variant="outline" className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Ajouter manuellement
+                    </Button>
                   </div>
                 )}
               </div>

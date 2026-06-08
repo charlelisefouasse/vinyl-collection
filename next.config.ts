@@ -9,6 +9,18 @@ const nextConfig: NextConfig = {
         hostname: "atthemoviesshop.com",
         pathname: "/cdn/shop/files/**",
       },
+      {
+        protocol: "https",
+        hostname: "*.s3.*.amazonaws.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname:
+          process.env.NEXT_PUBLIC_AWS_PUBLIC_URL?.replace("https://", "") ||
+          "fallback.local",
+        pathname: "/**",
+      },
     ],
   },
 };

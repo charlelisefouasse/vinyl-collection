@@ -30,6 +30,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
+import { useUploadFile } from "@better-upload/client";
+import { UploadButton } from "@/components/ui/upload-button";
 
 interface FormValues {
   name: string;
@@ -37,6 +39,7 @@ interface FormValues {
   variant: string;
   genres: string;
   release_date: string;
+  image: string;
   type: "collection" | "wishlist";
 }
 
@@ -80,6 +83,7 @@ export function AlbumForm({
       genres: album.genres?.join(", ") || "",
       release_date: album.release_date || "",
       type: (album.type as any) || "collection",
+      image: album.image || "",
     },
   });
 
@@ -93,6 +97,24 @@ export function AlbumForm({
     onSubmit(payload);
   };
 
+  const uploader = useUploadFile({
+    route: "form",
+    onUploadComplete: ({ file }) => {
+      // file.url should be available depending on better-upload configuration,
+      // or we can construct it if needed. For now, let's assume file.url or construct S3 url
+      const publicUrl = process.env.NEXT_PUBLIC_AWS_PUBLIC_URL;
+      const imageUrl = publicUrl
+        ? `${publicUrl}/${file.objectInfo.key}`
+        : `https://${process.env.NEXT_PUBLIC_AWS_BUCKET_NAME || "vinyl-collection"}.s3.${process.env.NEXT_PUBLIC_AWS_REGION || "eu-west-3"}.amazonaws.com/${file.objectInfo.key}`;
+      form.setValue("image", imageUrl);
+    },
+    onError: (error) => {
+      form.setError("image", {
+        message: error.message || "An error occurred.",
+      });
+    },
+  });
+
   const isSubmitting = form.formState.isSubmitting || isLoading;
   const disabled = !form.formState.isValid || isSubmitting;
 
@@ -104,6 +126,36 @@ export function AlbumForm({
     >
       <FieldGroup>
         <FieldSet>
+          <Controller
+            name="image"
+            control={form.control}
+            render={({ fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="form-rhf-demo-objectKeys">
+                  Image
+                </FieldLabel>
+                <div className="flex items-center gap-4">
+                  <UploadButton
+                    id="image"
+                    control={uploader.control}
+                    accept="image/png, image/jpg, image/jpeg, image/webp"
+                  />
+                  {form.watch("image") && (
+                    <div className="relative w-16 h-16 rounded-md overflow-hidden bg-muted">
+                      <img
+                        src={form.watch("image")}
+                        alt="Aperçu de la pochette"
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                  )}
+                </div>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
           <Controller
             name="name"
             control={form.control}
