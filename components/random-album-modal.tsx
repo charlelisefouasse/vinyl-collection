@@ -3,18 +3,18 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { AlbumCard } from "@/components/album-card";
+  Modal,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/ui/modal";
 import { ShuffleIcon } from "lucide-react";
 import { AlbumUI } from "@/types/spotify";
+import { AlbumCard } from "@/components/album-card";
 
-export function RandomAlbumDialog({
+export function RandomAlbumModal({
   albums,
 }: {
   albums: AlbumUI[] | undefined;
@@ -44,36 +44,40 @@ export function RandomAlbumDialog({
         <ShuffleIcon />
       </Button>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Écouter un album</DialogTitle>
-            <DialogDescription>
+      <Modal open={isOpen} onOpenChange={setIsOpen}>
+        <ModalContent className="sm:max-w-lg">
+          <ModalHeader className="text-left pt-4 sm:p-0">
+            <ModalTitle>Écouter un album</ModalTitle>
+            <ModalDescription>
               Voici un album choisi au hasard dans la collection.
-            </DialogDescription>
-          </DialogHeader>
+            </ModalDescription>
+          </ModalHeader>
 
           {selectedAlbum && (
-            <div className="py-4 flex justify-center">
+            <div className="p-4 sm:p-0 flex justify-center">
               <AlbumCard
                 album={selectedAlbum}
                 isInModal={true}
-                className="w-full "
+                className="w-full shadow-none"
               />
             </div>
           )}
 
-          <DialogFooter className="flex gap-2 sm:justify-end">
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
+          <ModalFooter className="flex-col sm:flex-row gap-2 sm:justify-end pb-12 sm:p-0">
+            <Button
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+              className="hidden sm:flex"
+            >
               Fermer
             </Button>
-            <Button onClick={pickRandom} className="gap-2">
+            <Button onClick={pickRandom} className="gap-2 w-full sm:w-auto">
               <ShuffleIcon className="h-4 w-4" />
               Relancer
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 }

@@ -2,11 +2,14 @@ import { AlbumUI } from "@/types/spotify";
 import Image from "next/image";
 import { AlbumCard } from "@/components/album-card";
 import { AlbumCardSkeleton } from "@/components/album-card-skeleton";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalTitle,
+  ModalTrigger,
+} from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
-
 import { VisuallyHidden } from "radix-ui";
-import { DialogTitle } from "@radix-ui/react-dialog";
 import { UseQueryResult } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -80,24 +83,27 @@ export function VinylList({
             key={album.id}
             className={cn({ "opacity-50": query.isFetching })}
           >
-            <Dialog>
+            <Modal>
               <VisuallyHidden.Root>
-                <DialogTitle>{album.name}</DialogTitle>
+                <ModalTitle>{album.name}</ModalTitle>
               </VisuallyHidden.Root>
-              <DialogTrigger className="w-full h-full text-left hover:cursor-pointer">
-                <AlbumCard album={album} className="h-full" />
-              </DialogTrigger>
-              <DialogContent
-                className="p-0 rounded-2xl"
+              <ModalTrigger className="w-full h-full text-left hover:cursor-pointer">
+                <AlbumCard album={album} className="h-full shadow-none" />
+              </ModalTrigger>
+              <ModalContent
+                className=" rounded-t-2xl md:rounded-2xl border-none md:border"
                 showCloseButton={false}
               >
-                <AlbumCard
-                  album={album}
-                  isInModal
-                  showAdminControls={isOwner}
-                />
-              </DialogContent>
-            </Dialog>
+                <div className="px-4 pb-12 pt-4 sm:p-0">
+                  <AlbumCard
+                    album={album}
+                    isInModal
+                    showAdminControls={isOwner}
+                    className="border-none shadow-none md:border md:shadow-lg "
+                  />
+                </div>
+              </ModalContent>
+            </Modal>
           </div>
         ))}
       </div>
