@@ -10,13 +10,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Spinner } from "@/components/ui/spinner";
 
 export function UserDropdown() {
   const session = useSession();
   const user = session.data?.user as { username?: string } | undefined;
 
   if (session.isPending) {
-    return null;
+    return <Spinner />;
   }
 
   if (!user?.username) {
